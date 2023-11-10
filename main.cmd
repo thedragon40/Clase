@@ -1,11 +1,16 @@
 @echo off
-echo Iniciando "broma"...
 
-setlocal EnableDelayedExpansion
+REM Lista de mensajes graciosos
+setlocal enabledelayedexpansion
+set mensajes[0]=¿Por qué los pájaros no usan Facebook? Porque ya tienen Twitter.
+set mensajes[1]=¿Qué le dice un jardinero a otro jardinero? Nos vemos cuando podamos.
+set mensajes[2]=¿Por qué el libro de matemáticas se suicidó? Porque tenía demasiados problemas.
+set mensajes[3]=¿Qué hace una abeja en el gimnasio? ¡Zum-ba!
+set mensajes[4]=¿Cómo se llama el campeón de buceo japonés? Tokofondo.
+set mensajes[5]=¿Qué le dijo una iguana a su hermana gemela? Somos iguanitas.
+set mensajes[6]=¿Cómo se despiden los químicos? Ácido un placer.
 
-:start
-set /a "x=!random! %% 800"
-set /a "y=!random! %% 600"
-powershell -WindowStyle Hidden -Command "& {Start-Process cmd -ArgumentList '/c echo Ventana' -WindowStyle Normal -NoNewWindow -WorkingDirectory ~ -Verb RunAs -PassThru | %{Set-WindowPos $_.MainWindowHandle -X %x% -Y %y%})}"
-timeout /nobreak /t 2 >nul
-goto start
+REM Crear múltiples ventanas de CMD y mostrar mensajes en ellas
+for /l %%i in (1, 1, 5) do (
+    start cmd /k "echo Mensaje gracioso: !mensajes[%%i]!"
+)
