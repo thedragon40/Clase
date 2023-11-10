@@ -3,7 +3,7 @@ chcp 65001 > nul
 
 REM Crear múltiples ventanas de CMD y mostrar mensajes en ellas
 for /l %%i in (1, 1, 30) do (
-    start cmd /k "!mensajes[%%i]!"
+    start cmd /k
 )
 
 REM Esperar 10 segundos
