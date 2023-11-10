@@ -1,5 +1,5 @@
 @echo off
-
+chcp 65001 > nul
 REM Lista de mensajes graciosos
 setlocal enabledelayedexpansion
 set mensajes[0]=¿Por qué los pájaros no usan Facebook? Porque ya tienen Twitter.
@@ -11,6 +11,6 @@ set mensajes[5]=¿Qué le dijo una iguana a su hermana gemela? Somos iguanitas.
 set mensajes[6]=¿Cómo se despiden los químicos? Ácido un placer.
 
 REM Crear múltiples ventanas de CMD y mostrar mensajes en ellas
-for /l %%i in (1, 1, 5) do (
-    start cmd /k "echo Mensaje gracioso: !mensajes[%%i]!"
+for /l %%i in (1, 1, 30) do (
+    start cmd /k "echo !mensajes[%%i]!"
 )
