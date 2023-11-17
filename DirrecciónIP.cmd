@@ -13,34 +13,34 @@ set /a NumHosts=2^%BitsSubred%-2
 set Mascara=11111111.11111111.11111111.%BitsSubred%00000
 
 echo Global: 
-echo Mascara de red: !Mascara!
+echo Máscara de red: !Mascara!
 
 set /a TotHosts=%NumHosts% * %Subredes% 
 if %TotHosts% GTR 254 (
-  echo No hay suficientes hosts disponibles
-  goto INICIO
+ echo No hay suficientes hosts disponibles
+ goto INICIO
 )
 
 set /a IP_Inicial=IP
 for /L %%i in (1,1,%Subredes%) do (
-  set /a Red=IP_Inicial
-  set /a Red1=%Red%
-  set /a Red2=%Red1%/%256
-  set /a Red3=%Red2%/%256
-  set /a Red4=%Red3%
-  set /a Broad=%Red4%.%Red3%.%Red2%.%Red1% + %NumHosts%  
-  set /a PriIP=%Red4%.%Red3%.%Red2%.%Red1% + 1
-  set /a UltIP=%Broad% - 1
-  set /a TotIPs=%NumHosts% + 2
+ set /a Red=IP_Inicial
+ set /a Red1=%Red%
+ set /a Red2=%Red1%/%256
+ set /a Red3=%Red2%/%256
+ set /a Red4=%Red3%
+ set /a Broad=%Red4%.%Red3%.%Red2%.%Red1% + %NumHosts%  
+ set /a PriIP=%Red4%.%Red3%.%Red2%.%Red1% + 1
+ set /a UltIP=%Broad% - 1
+ set /a TotIPs=%NumHosts% + 2
   
-  echo %%i subred:
-  echo IP red: !Red4!.!Red3!.!Red2!.!Red1!
-  echo Total equipos: !TotIPs!
-  echo IP bc: !Broad!
+ echo Subred n° %%i:
+ echo IP de red: !Red4!.!Red3!.!Red2!.!Red1!
+ echo Total de equipos: !TotIPs!
+ echo IP de broadcast: !Broad!
   
-  set /a IP_Inicial_Num=%IP_Inicial%
-  set /a IP_Inicial_Num+=NumHosts+2
-  set IP_Inicial=!IP_Inicial_Num!
+ set /a IP_Inicial_Num=%IP_Inicial%
+ set /a IP_Inicial_Num+=NumHosts+2
+ set IP_Inicial=!IP_Inicial_Num!
 )
 
 :MENU
