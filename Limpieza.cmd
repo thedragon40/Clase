@@ -1,100 +1,120 @@
 @echo off
 color 0A
+chcp 65001 > nul
 
-:: Detectar versión de Windows
+:: Detectar versión 
+:: Código para detectar versión y ejecutar mantenimiento
 
+:: Preguntar si configurar ejecución periódica
+set /p config=¿Desea configurar la ejecución automática periódica? (S/N): 
+if /i "%config%"=="S" goto :configurar
+if /i "%config%"=="N" goto :fin
+
+:configurar
+set /p tiempo=¿Cada cuántos días quiere ejecutar el mantenimiento?
+schtasks /create /sc daily /mo %tiempo% /tn "Mantenimiento PC" /tr "mantenimiento.cmd"
+echo Mantenimiento programado para ejecutarse cada %tiempo% días.
+
+:fin 
+echo Proceso finalizado.
+
+:: Detectar versión
 ver | find "5.1" > nul 
 if %errorlevel% equ 0 (
-  echo Windows XP detectado
+  echo Windows XP
   goto :XP
 )
 
 ver | find "6.0" > nul
-if %errorlevel% equ 0 ( 
-  echo Windows Vista detectado
-  goto :Vista
+if %errorlevel% equ 0 (
+  echo Windows Vista
+  goto :Vista   
 )
 
-ver | find "6.1" > nul  
+ver | find "6.1" > nul
 if %errorlevel% equ 0 (
-  echo Windows 7 detectado
-  goto :Seven
+  echo Windows 7
+  goto :Win7  
 )
-  
-ver | find "6.2" > nul
+
+ver | find "6.2" > nul 
 if %errorlevel% equ 0 (
-  echo Windows 8 detectado
-  goto :Eight  
+  echo Windows 8
+  goto :Win8
 )
 
 ver | find "6.3" > nul
-if %errorlevel% equ 0 (
-  echo Windows 8.1 detectado
-  goto :EightOne
-)
- 
-ver | find "10.0" > nul  
-if %errorlevel% equ 0 (
-  color 0B
-  echo Windows 10 detectado
-  goto :Ten  
+if %errorlevel% equ 0 ( 
+  echo Windows 8.1
+  goto :Win81
 )
 
-:: Por defecto asumimos Windows 11 
-color 0C
-echo Windows 11 detectado
-goto :Eleven
+ver | find "10.0" > nul   
+if %errorlevel% equ 0 (
+  echo Windows 10
+  goto :Win10
+) 
+
+:: Por defecto asumimos Windows 11
+echo Windows 11
+goto :Win11
 
 
-:XP
-REM Comandos para XP
-msg * "Mantenimiento completado en Windows XP" 
+:XP 
+del %temp%\* /s /f /q
+ipconfig /flushdns
+netsh int ip reset 
+msg * /time:60 "Mantenimiento completado en Windows XP"
 goto :EOF
 
-:Vista  
-REM Comandos para Vista
-msg * "Mantenimiento completado en Windows Vista"
+:Vista
+cleanmgr /sageset:99
+cleanmgr /sagerun:99 
+diskpart /slimp all
+msg * /time:60 "Mantenimiento completado en Windows Vista"
 goto :EOF
 
-:Seven
-REM Comandos para Windows 7  
-del /s /q /f %temp%\*  
-rmdir /s /q %temp% 
-md %temp%
-cleanmgr /sagerun:1  
+:Win7
+cleanmgr /verylowdisk
+diskcleanup /autoclean
+defrag C: /U /V 
+chkdsk /f
+sfc /scannow
+msg * /time:60 "Mantenimiento completado en Windows 7"  
+goto :EOF
+
+:Win8
+Dism /online /Cleanup-Image /AnalyzeComponentStore
+Dism /online /Cleanup-Image /StartComponentCleanup
+cleanmgr /verylowdisk
+chkdsk /spotfix
+msg * /time:60 "Mantenimiento completado en Windows 8"
+goto :EOF
+
+:Win81
+cleanmgr /verylowdisk
+chkdsk /f
+sfc /scannow
+Dism /Online /Cleanup-Image /CheckHealth
+Dism /online /Cleanup-Image /ScanHealth
+Dism /Online /Cleanup-Image /RestoreHealth
+msg * /time:60 "Mantenimiento completado en Windows 8.1"
+goto :EOF
+
+:Win10
+cleanmgr /verylowdisk  
+chkdsk /f
+sfc /scannow
+DISM /Online /Cleanup-Image /RestoreHealth 
 defrag C: /U /V
-chkdsk C: /f /r /x
-msg * "Mantenimiento completado en Windows 7"
+msg %username% /time:60 "Mantenimiento completado en Windows 10" 
 goto :EOF
 
-:Eight
-REM Comandos para Windows 8
-msg * "Mantenimiento completado en Windows 8"  
-goto :EOF
-
-:EightOne
-REM Comandos para Windows 8.1
-msg * "Mantenimiento completado en Windows 8.1"
-goto :EOF
-   
-:Ten
-REM Comandos para Windows 10
-del /s /q /f %temp%\* 
-rmdir /s /q %temp%  
-md %temp%  
-cleanmgr /sagerun:1   
+:Win11
+cleanmgr /verylowdisk
+chkdsk /f 
+sfc /scannow
+DISM /Online /Cleanup-Image /RestoreHealth
 defrag C: /U /V  
-chkdsk C: /f /r /x
-msg %username% /time:30 "Mantenimiento completado en Windows 10"
-goto :EOF  
-
-:Eleven 
-REM Comandos para Windows 11
-del /s /q /f %temp%\*   
-rmdir /s /q %temp%
-md %temp%   
-cleanmgr /sagerun:1  
-defrag C: /U /V    
-chkdsk C: /f /r /x
-msg %username% /time:30 "Mantenimiento completado en Windows 11" 
+msg %username% /time:60 "Mantenimiento completado en Windows 11"
 goto :EOF
