@@ -1,6 +1,39 @@
 @echo off
-color 0A
 chcp 65001 > nul
+
+:: Verificar si tiene permisos de administrador
+openfiles > nul 2>&1
+if %errorlevel% == 0 (
+  echo Tiene permisos de administrador. Continuando...
+  goto mantenimiento
+) else (
+  echo Se requieren permisos de administrador.
+  set /p elevar="¿Desea reiniciar el script como administrador? (S/N)"
+  if /i "%elevar%"=="S" (
+    echo Reiniciando el script con permisos elevados...
+    powershell Start-Process -FilePath '%0' -verb runas
+    exit
+  ) else (
+    echo Operación cancelada por el usuario.
+    goto fin
+  )  
+)
+
+:mantenimiento
+:: Preguntar si desea continuar
+echo Se va a proceder a realizar las siguientes tareas de mantenimiento:
+echo - Limpieza de archivos temporales 
+echo - Desfragmentación de disco duro
+echo - Comprobación de errores en disco  
+echo - Reparación de archivos de sistema
+echo - Optimización de imagen de Windows
+echo - Limpieza de registro
+
+set /p confirmar=¿Desea continuar? (S/N):
+if /i "%confirmar%"=="S" goto :continuar 
+if /i "%confirmar%"=="N" goto :fin
+
+:continuar
 
 :: Preguntar si configurar ejecución periódica
 set /p config=¿Desea configurar la ejecución automática periódica? (S/N): 
