@@ -34,7 +34,6 @@ if /i "%confirmar%"=="S" goto :continuar
 if /i "%confirmar%"=="N" goto :fin
 
 :continuar
-
 :: Preguntar si configurar ejecución periódica
 set /p config=¿Desea configurar la ejecución automática periódica? (S/N): 
 if /i "%config%"=="S" goto :configurar
@@ -91,20 +90,48 @@ goto :Win11
 
 :: Código para detectar versión y ejecutar mantenimiento
 :XP 
+call :executeXP
+goto :EOF
+
+:Vista
+call :executeVista
+goto :EOF
+
+:Win7
+call :executeWin7
+goto :EOF
+
+:Win8
+call :executeWin8
+goto :EOF
+
+:Win81
+call :executeWin81
+goto :EOF
+
+:Win10
+call :executeWin10
+goto :EOF
+
+:Win11
+call :executeWin11
+goto :EOF
+
+:executeXP
 del %temp%\* /s /f /q
 ipconfig /flushdns
 netsh int ip reset 
 msg * /time:60 "Mantenimiento completado en Windows XP"
 goto :EOF
 
-:Vista
+:executeVista
 cleanmgr /sageset:99
 cleanmgr /sagerun:99 
 diskpart /slimp all
 msg * /time:60 "Mantenimiento completado en Windows Vista"
 goto :EOF
 
-:Win7
+:executeWin7
 cleanmgr /verylowdisk
 diskcleanup /autoclean
 defrag C: /U /V 
@@ -113,7 +140,7 @@ sfc /scannow
 msg * /time:60 "Mantenimiento completado en Windows 7"  
 goto :EOF
 
-:Win8
+:executeWin8
 Dism /online /Cleanup-Image /AnalyzeComponentStore
 Dism /online /Cleanup-Image /StartComponentCleanup
 cleanmgr /verylowdisk
@@ -121,7 +148,7 @@ chkdsk /spotfix
 msg * /time:60 "Mantenimiento completado en Windows 8"
 goto :EOF
 
-:Win81
+:executeWin81
 cleanmgr /verylowdisk
 chkdsk /f
 sfc /scannow
@@ -131,7 +158,7 @@ Dism /Online /Cleanup-Image /RestoreHealth
 msg * /time:60 "Mantenimiento completado en Windows 8.1"
 goto :EOF
 
-:Win10
+:executeWin10
 cleanmgr /verylowdisk  
 chkdsk /f
 sfc /scannow
@@ -140,7 +167,7 @@ defrag C: /U /V
 msg %username% /time:60 "Mantenimiento completado en Windows 10" 
 goto :EOF
 
-:Win11
+:executeWin11
 cleanmgr /verylowdisk
 chkdsk /f 
 sfc /scannow
