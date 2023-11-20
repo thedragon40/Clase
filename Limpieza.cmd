@@ -1,128 +1,129 @@
 @echo off
 chcp 65001 > nul
-title Mantenimiento del PC
-color 0E
-cls 
 
-:: Mensaje inicial  
-color 0B
-echo Este asistente realizará tareas de 
-echo optimizacion y mantenimiento en su 
-echo equipo, como:
-echo.
-echo - Limpieza de archivos temporales
-echo - Analisis de disco  
-echo - Desfragmentacion
-echo - Optimizacion del sistema
-echo.
-echo Presione una tecla para continuar.
-pause >nul
-
-:: Comprobar permisos 
-
+:: Comprobar si se está ejecutando como administrador
 net session >nul 2>&1
-if %errorLevel% == 0 (
-  echo Permisos de administrador OK.
-) else (
-  color 0C
-  echo Requiere ejecucion como administrador.
-  timeout /t 5 >nul
-  exit
-)  
-
-:: Detectar SO
-color 0D 
-for /f "tokens=4-5 delims=. " %%i in ('ver') do (
-  set version=%%i.%%j
-  echo Sistema Operativo Windows %%i.%%j detectado. 
+if %errorLevel% neq 0 (
+    echo Este script requiere privilegios de administrador. Cerrando...
+    timeout 2 > nul
+    runas /user:Administrator "%~dpnx0"
+    exit /b
 )
 
-:: Comandos segun SO
-if "%version%"=="5.1" goto :XP
-if "%version%"=="6.0" goto :Vista
-if "%version%"=="6.1" goto :Win7
-if "%version%"=="6.2" goto :Win8
-if "%version%"=="6.3" goto :Win81
-if "%version%"=="10.0" goto :Win10
-goto :Win11
+:menu
+cls
+echo ============================================
+echo Elija una opción:
+echo ============================================
+echo 1 - Optimización
+echo 2 - Mantenimiento 
+echo 3 - Optimización y Mantenimiento
+echo 4 - Salir
+echo ============================================
 
-:XP
+set /p opcion=
+if "%opcion%"=="1" goto optimizar
+if "%opcion%"=="2" goto mantener
+if "%opcion%"=="3" goto optimizar_mantener
+if "%opcion%"=="4" exit /b
+
+:optimizar
+echo Creando punto de restauración...
+:: Crear punto de restauración antes de la optimización
+wmic.exe /Namespace:\\root\default Path SystemRestore Call CreateRestorePoint "Antes de la Optimización", 100, 7
+
+echo Optimización en curso...
+:: Cambiar color a amarillo
 color 0E
-del %temp%\* /s /f /q
-ipconfig /flushdns
-netsh int ip reset
-goto :finalizar
 
-:Vista  
+:: Código de optimización
+echo Deshabilitando servicios innecesarios...
+sc config "wuauserv" start= disabled
+sc config "wercplsupport" start= disabled
+sc config "RemoteRegistry" start= disabled
+sc config "sppsvc" start= disabled
+echo Servicios deshabilitados con éxito.
+
+echo Desactivando tareas programadas innecesarias...
+schtasks /change /tn "\Microsoft\Windows\WindowsBackup\AutomaticBackup" /disable
+schtasks /change /tn "\Microsoft\Windows\WindowsUpdate\Automatic App Update" /disable
+schtasks /change /tn "\Microsoft\Windows\DiskDiagnostic\Microsoft-Windows-DiskDiagnosticDataCollector" /disable
+echo Tareas programadas desactivadas con éxito.
+
+:: Pausa para permitir la confirmación antes de cerrar
+pause
+goto final
+
+:mantener 
+echo Creando punto de restauración...
+:: Crear punto de restauración antes del mantenimiento
+wmic.exe /Namespace:\\root\default Path SystemRestore Call CreateRestorePoint "Antes del Mantenimiento", 100, 7
+
+echo Realizando mantenimiento...
+:: Cambiar color a verde
+color 0A
+
+:: Código de mantenimiento
+echo Limpiando archivos temporales...
+cleanmgr /sagerun:1
+echo Archivos temporales eliminados con éxito.
+
+echo Desfragmentando unidades (puede tardar)...
+defrag /c /o
+echo Desfragmentación completada.
+
+echo Verificando y reparando errores en el disco...
+chkdsk /f
+echo Verificación y reparación de errores completada.
+
+:: Pausa para permitir la confirmación antes de cerrar
+pause
+goto final
+
+:optimizar_mantener
+echo Creando punto de restauración...
+:: Crear punto de restauración antes de la optimización y mantenimiento
+wmic.exe /Namespace:\\root\default Path SystemRestore Call CreateRestorePoint "Antes de la Optimización y Mantenimiento", 100, 7
+
+echo Optimización y mantenimiento en curso...
+:: Cambiar color a cian
 color 0B
-cleanmgr /sagerun:99
-diskpart /s limpiar todo  
-DISM /Online /Cleanup-Image /RestoreHealth
+
+:: Código de optimización 
+echo Deshabilitando servicios innecesarios...
+sc config "wuauserv" start= disabled
+sc config "wercplsupport" start= disabled
+sc config "RemoteRegistry" start= disabled
+sc config "sppsvc" start= disabled
+echo Servicios deshabilitados con éxito.
+
+echo Desactivando tareas programadas innecesarias...
+schtasks /change /tn "\Microsoft\Windows\WindowsBackup\AutomaticBackup" /disable
+schtasks /change /tn "\Microsoft\Windows\WindowsUpdate\Automatic App Update" /disable
+schtasks /change /tn "\Microsoft\Windows\DiskDiagnostic\Microsoft-Windows-DiskDiagnosticDataCollector" /disable
+echo Tareas programadas desactivadas con éxito.
+
+:: Código de mantenimiento
+echo Limpiando archivos temporales...
+cleanmgr /sagerun:1
+echo Archivos temporales eliminados con éxito.
+
+echo Desfragmentando unidades (puede tardar)...
+defrag /c /o
+echo Desfragmentación completada.
+
+echo Verificando y reparando errores en el disco...
 chkdsk /f
-goto :finalizar
+echo Verificación y reparación de errores completada.
 
-:Win7
-color 0D
-cleanmgr /verylowdisk
-chkdsk /f 
-sfc /scannow
-defrag C:
-DISM /Online /Cleanup-Image /Restorehealth
-goto :finalizar
+:: Pausa para permitir la confirmación antes de cerrar
+pause
+goto final
 
-:Win8
-color 0C  
-Dism /Cleanup-Image /StartComponentCleanup
-chkdsk /spotfix
-DISM /Online /Cleanup-Image /RestoreHealth
-cleanmgr /verylowdisk
-goto :finalizar
-
-:Win81 
-color 0E
-cleanmgr /verylowdisk 
-chkdsk /f
-sfc /scannow
-DISM /Online /Cleanup-Image /RestoreHealth
-defrag C: /U /V  
-goto :finalizar
-
-:Win10
-color 0A
-cleanmgr /verylowdisk  
-chkdsk /f 
-sfc /scannow
-DISM /Online /Cleanup-Image /RestoreHealth  
-defrag C: /U /V
-goto :finalizar
-
-:Win11
-color 0F
-cleanmgr /verylowdisk
-chkdsk /f  
-sfc /scannow  
-DISM /Online /Cleanup-Image /Restorehealth
-defrag C: /U /V
-goto :finalizar
-
-:finalizar
-
-:finalizar 
-color 0A
-:: Mostrar progreso
-for /L %%A in (1,1,100) do (
-  cls
-  echo Progreso: [%%A%%%]
-  ping -n 2 localhost >nul 
-)
-
-:: Preguntas finales 
-color 0C
-set /p reiniciar=¿Desea reiniciar la PC ahora? (S/N)
-if /i "%reiniciar%"=="S" (
-  shutdown /r /t 0
-)
-
-:: Mensaje final
-color 0F
-echo Mantenimiento completado.
+:final
+:: Restaurar color a blanco
+color 07
+echo Proceso finalizado.
+echo.
+timeout 5 > nul
+exit /b
