@@ -1,3 +1,4 @@
+batch
 @echo off
 chcp 65001 > nul
 
@@ -22,53 +23,42 @@ if %errorlevel% == 0 (
 :mantenimiento
 :: Preguntar si desea continuar
 echo.
-echo =========================
-echo    Tareas de mantenimiento
-echo =========================
-echo.
-echo - Limpieza de archivos temporales 
+echo Se va a proceder a realizar las siguientes tareas de mantenimiento:
+echo - Limpieza de archivos temporales
 echo - Desfragmentación de disco duro
-echo - Comprobación de errores en disco  
+echo - Comprobación de errores en disco
 echo - Reparación de archivos de sistema
 echo - Optimización de imagen de Windows
 echo - Limpieza de registro
 echo.
-echo =========================
-echo.
-set /p confirmar=¿Desea continuar? (S/N):
+
+set /p confirmar=¿Desea continuar con el mantenimiento? (S/N): 
 if /i "%confirmar%"=="S" goto :continuar 
 if /i "%confirmar%"=="N" goto :fin
 
 :continuar
 :: Preguntar si configurar ejecución periódica
-echo.
-echo ============================
-echo   Ejecución automática periódica
-echo ============================
-echo.
 set /p config=¿Desea configurar la ejecución automática periódica? (S/N): 
 if /i "%config%"=="S" goto :configurar
 if /i "%config%"=="N" goto :fin
 
 :configurar
 set /p tiempo=¿Cada cuántos días quiere ejecutar el mantenimiento?
-echo.
-echo Programando la ejecución periódica...
 schtasks /create /sc daily /mo %tiempo% /tn "Mantenimiento PC" /tr "mantenimiento.cmd"
 echo Mantenimiento programado para ejecutarse cada %tiempo% días.
 echo.
-echo ============================
-echo.
 
 :fin 
-echo.
-echo ===========================
-echo       Proceso finalizado
-echo ===========================
-echo.
+echo Proceso finalizado.
 echo.
 
 :: Detectar versión
+ver | find "5.2" > nul 
+if %errorlevel% equ 0 (
+  echo Windows Server 2003
+  goto :Server2003
+)
+
 ver | find "5.1" > nul 
 if %errorlevel% equ 0 (
   echo Windows XP
@@ -110,6 +100,10 @@ echo Windows 11
 goto :Win11
 
 :: Código para detectar versión y ejecutar mantenimiento
+:Server2003
+echo El mantenimiento no es compatible con Windows Server 2003.
+goto :EOF
+
 :XP 
 call :executeXP
 goto :EOF
@@ -139,175 +133,106 @@ call :executeWin11
 goto :EOF
 
 :executeXP
-echo Realizando el mantenimiento en Windows XP...
-echo Limpiando archivos temporales...
-del %temp%\* /s /f /q
+echo Realizando mantenimiento en Windows XP...
 echo.
-echo Limpieza completada.
-echo.
-echo Actualizando configuración de red...
-ipconfig /flushdns
-netsh int ip reset 
-echo.
-echo Actualización completada.
-echo.
+echo Limpieza de archivos temporales...
+del %temp%\* /s /f /q > nul
+echo Desfragmentación de disco duro...
+ipconfig /flushdns > nul
+echo Comprobación de errores en disco...
+netsh int ip reset > nul
+echo Reparación de archivos de sistema...
 msg * /time:60 "Mantenimiento completado en Windows XP"
+echo.
 goto :EOF
 
 :executeVista
-echo Realizando el mantenimiento en Windows Vista...
-echo Configurando limpieza de archivos temporales...
-cleanmgr /sageset:99
-cleanmgr /sagerun:99 
+echo Realizando mantenimiento en Windows Vista...
 echo.
-echo Limpieza completada.
-echo.
-echo Desfragmentando disco duro...
-diskpart /slimp all
-echo.
-echo Desfragmentación completada.
-echo.
+echo Limpieza de archivos temporales y desfragmentación de disco duro...
+cleanmgr /sageset:99 > nul
+cleanmgr /sagerun:99 > nul
+echo Comprobación de errores en disco...
+diskpart /slimp all > nul
+echo Reparación de archivos de sistema...
 msg * /time:60 "Mantenimiento completado en Windows Vista"
+echo.
 goto :EOF
 
 :executeWin7
-echo Realizando el mantenimiento en Windows 7...
-echo Limpieza de archivos temporales...
-cleanmgr /verylowdisk
+echo Realizando mantenimiento en Windows 7...
 echo.
-echo Limpieza completada.
-echo.
-echo Limpieza automática de disco...
-diskcleanup /autoclean
-echo.
-echo Limpieza automática completada.
-echo.
-echo Desfragmentando disco duro...
-defrag C: /U /V 
-echo.
-echo Desfragmentación completada.
-echo.
+echo Limpieza de archivos temporales y desfragmentación de disco duro...
+cleanmgr /verylowdisk > nul
+diskcleanup /autoclean > nul
+defrag C: /U /V > nul
 echo Comprobación de errores en disco...
-chkdsk /f
-echo.
-echo Comprobación de errores en disco completada.
-echo.
+chkdsk /f > nul
 echo Reparación de archivos de sistema...
-sfc /scannow
+sfc /scannow > nul
+echo Optimización de imagen de Windows...
+msg * /time:60 "Mantenimiento completado en Windows 7"
 echo.
-echo Reparación de archivos de sistema completada.
-echo.
-msg * /time:60 "Mantenimiento completado en Windows 7"  
 goto :EOF
 
 :executeWin8
-echo Realizando el mantenimiento en Windows 8...
-echo Analizando componentes del sistema...
-Dism /online /Cleanup-Image /AnalyzeComponentStore
+echo Realizando mantenimiento en Windows 8...
 echo.
-echo Análisis completado.
-echo.
-echo Limpiando componentes del sistema...
-Dism /online /Cleanup-Image /StartComponentCleanup
-echo.
-echo Limpieza completada.
-echo.
-echo Limpieza de archivos temporales...
-cleanmgr /verylowdisk
-echo.
-echo Limpieza completada.
-echo.
-echo Comprobación de errores en disco...
-chkdsk /spotfix
-echo.
-echo Comprobación de errores en disco completada.
-echo.
+echo Análisis y limpieza de componentes de imagen...
+Dism /online /Cleanup-Image /AnalyzeComponentStore > nul
+Dism /online /Cleanup-Image /StartComponentCleanup > nul
+echo Limpieza de archivos temporales y comprobación de errores en disco...
+cleanmgr /verylowdisk > nul
+chkdsk /spotfix > nul
+echo Reparación de archivos de sistema...
 msg * /time:60 "Mantenimiento completado en Windows 8"
+echo.
 goto :EOF
 
 :executeWin81
-echo Realizando el mantenimiento en Windows 8.1...
-echo Limpieza de archivos temporales...
-cleanmgr /verylowdisk
+echo Realizando mantenimiento en Windows 8.1...
 echo.
-echo Limpieza completada.
-echo.
-echo Comprobación de errores en disco...
-chkdsk /f
-echo.
-echo Comprobación de errores en disco completada.
-echo.
-echo Reparación de archivos de sistema...
-sfc /scannow
-echo.
-echo Reparación de archivos de sistema completada.
-echo.
-echo Comprobando integridad de la imagen de Windows...
-Dism /Online /Cleanup-Image /CheckHealth
-Dism /online /Cleanup-Image /ScanHealth
-Dism /Online /Cleanup-Image /RestoreHealth
-echo.
-echo Comprobación de imagen de Windows completada.
-echo.
+echo Limpieza de archivos temporales y comprobación de errores en disco...
+cleanmgr /verylowdisk > nul
+chkdsk /f > nul
+echo Reparación de archivos de sistema y comprobación de salud de la imagen...
+sfc /scannow > nul
+Dism /Online /Cleanup-Image /CheckHealth > nul
+Dism /online /Cleanup-Image /ScanHealth > nul
+Dism /Online /Cleanup-Image /RestoreHealth > nul
+echo Optimización de imagen de Windows...
 msg * /time:60 "Mantenimiento completado en Windows 8.1"
+echo.
 goto :EOF
 
 :executeWin10
-echo Realizando el mantenimiento en Windows 10...
-echo Limpieza de archivos temporales...
-cleanmgr /verylowdisk  
+echo Realizando mantenimiento en Windows 10...
 echo.
-echo Limpieza completada.
+echo Limpieza de archivos temporales y comprobación de errores en disco...
+cleanmgr /verylowdisk > nul
+chkdsk /f > nul
+echo Reparación de archivos de sistema y restauración de la salud de la imagen...
+sfc /scannow > nul
+DISM /Online /Cleanup-Image /RestoreHealth > nul
+echo Desfragmentación de disco duro...
+defrag C: /U /V > nul
+echo Optimización de imagen de Windows...
+msg %username% /time:60 "Mantenimiento completado en Windows 10"
 echo.
-echo Comprobación de errores en disco...
-chkdsk /f
-echo.
-echo Comprobación de errores en disco completada.
-echo.
-echo Reparación de archivos de sistema...
-sfc /scannow
-echo.
-echo Reparación de archivos de sistema completada.
-echo.
-echo Restaurando la imagen de Windows...
-DISM /Online /Cleanup-Image /RestoreHealth 
-echo.
-echo Restauración de imagen de Windows completada.
-echo.
-echo Desfragmentando disco duro...
-defrag C: /U /V
-echo.
-echo Desfragmentación completada.
-echo.
-msg %username% /time:60 "Mantenimiento completado en Windows 10" 
 goto :EOF
 
 :executeWin11
-echo Realizando el mantenimiento en Windows 11...
-echo Limpieza de archivos temporales...
-cleanmgr /verylowdisk
+echo Realizando mantenimiento en Windows 11...
 echo.
-echo Limpieza completada.
-echo.
-echo Comprobación de errores en disco...
-chkdsk /f 
-echo.
-echo Comprobación de errores en disco completada.
-echo.
-echo Reparación de archivos de sistema...
-sfc /scannow
-echo.
-echo Reparación de archivos de sistema completada.
-echo.
-echo Restaurando la imagen de Windows...
-DISM /Online /Cleanup-Image /RestoreHealth
-echo.
-echo Restauración de imagen de Windows completada.
-echo.
-echo Desfragmentando disco duro...
-defrag C: /U /V  
-echo.
-echo Desfragmentación completada.
-echo.
+echo Limpieza de archivos temporales y comprobación de errores en disco...
+cleanmgr /verylowdisk > nul
+chkdsk /f > nul
+echo Reparación de archivos de sistema y restauración de la salud de la imagen...
+sfc /scannow > nul
+DISM /Online /Cleanup-Image /RestoreHealth > nul
+echo Desfragmentación de disco duro...
+defrag C: /U /V > nul
+echo Optimización de imagen de Windows...
 msg %username% /time:60 "Mantenimiento completado en Windows 11"
+echo.
 goto :EOF
