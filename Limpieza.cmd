@@ -2,9 +2,6 @@
 color 0A
 chcp 65001 > nul
 
-:: Detectar versión 
-:: Código para detectar versión y ejecutar mantenimiento
-
 :: Preguntar si configurar ejecución periódica
 set /p config=¿Desea configurar la ejecución automática periódica? (S/N): 
 if /i "%config%"=="S" goto :configurar
@@ -59,7 +56,7 @@ if %errorlevel% equ 0 (
 echo Windows 11
 goto :Win11
 
-
+:: Código para detectar versión y ejecutar mantenimiento
 :XP 
 del %temp%\* /s /f /q
 ipconfig /flushdns
