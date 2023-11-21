@@ -164,3 +164,12 @@ if /i "%continuar%" neq "S" goto menu
 echo La optimización y mantenimiento mejoran el rendimiento del sistema.
 set /p continuar=¿Desea continuar? (S/N):
 if /i "%continuar%" neq "S" goto menu
+
+:finalizado
+msg * Proceso finalizado *
+
+:reiniciar 
+msg * ¿Desea reiniciar el equipo para aplicar los cambios? *
+msg * Presione S para Si o N para No *
+set /p reiniciar=
+if /i "%reiniciar%"=="S" shutdown /r /t 0
