@@ -13,15 +13,15 @@ if %errorLevel% neq 0 (
    exit
 )
 
-:: Ventana inicial
-msg * Optimización y Mantenimiento * 
-msg * Elija una opción: *
-msg * 1 - Optimización inicial *
-msg * 2 - Mantenimiento regular *
-msg * 3 - Optimización y mantenimiento * 
-msg * 4 - Salir *
-
-set /p opcion= 
+:inicio 
+choice /m "Optimización y Mantenimiento"
+echo.
+choice /c 1234 /m "Elija una opción:"
+echo 1 - Optimización inicial
+echo 2 - Mantenimiento regular
+echo 3 - Optimización y mantenimiento
+echo 4 - Salir
+set /p opcion=
 
 if "%opcion%"=="1" goto :optimizacion
 if "%opcion%"=="2" goto :mantenimiento
