@@ -166,7 +166,7 @@ set /p continuar=¿Desea continuar? (S/N):
 if /i "%continuar%" neq "S" goto menu
 
 :finalizado
-msg * Proceso finalizado *
+msg * Se a finalizado el proceso correctamente. *
 
 :reiniciar 
 msg * ¿Desea reiniciar el equipo para aplicar los cambios? *
