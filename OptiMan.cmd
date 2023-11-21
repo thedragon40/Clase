@@ -1,267 +1,169 @@
 @echo off
+&color 0A
+&title Optimización y Mantenimiento
 
-chcp 65001 > nul
+:: Ocultar comandos
+echo off
 
 :: Comprobar si se está ejecutando como administrador
-
 net session >nul 2>&1
-
 if %errorLevel% neq 0 (
-
-echo Este script requiere privilegios de administrador. Cerrando...
-
-timeout 2 > nul
-
-runas /user:Administrator "%~dpnx0"
-
-exit /b 
-
+   echo Este script requiere privilegios de administrador.
+   timeout 3 >nul
+   exit
 )
 
 :menu
-
-echo Elija una opción:
-
-echo 1 - Optimización 
-
-echo 2 - Mantenimiento
-
-echo 3 - Optimización y Mantenimiento
-
+cls
+echo ============================
+echo   OPTIMIZACIÓN Y MANTENIMIENTO
+echo ============================
+echo.
+echo 1 - Optimización inicial
+echo 2 - Mantenimiento regular
+echo 3 - Optimización y mantenimiento
 echo 4 - Salir
+echo.
+set /p opcion=Elige una opción: 
 
-set /p opcion=
+if "%opcion%"=="1" goto :optimizacion
+if "%opcion%"=="2" goto :mantenimiento
+if "%opcion%"=="3" goto :optimizacion_mantenimiento
+if "%opcion%"=="4" exit
 
-if "%opcion%"=="1" goto optimizar
+:optimizacion  
+cls
+echo ============================
+echo    OPTIMIZACIÓN INICIAL
+echo ============================
+call :confirmar_optimizacion
 
-if "%opcion%"=="2" goto mantener 
+:: Optimización inicial
+REM Deshabilitar efectos visuales
+reg add "HKEY_CURRENT_USER\Control Panel\Desktop" /v DragFullWindows /t REG_SZ /d 0 /f
+reg add "HKEY_CURRENT_USER\Control Panel\Desktop" /v MenuShowDelay /t REG_SZ /d 0 /f  
+reg add "HKEY_CURRENT_USER\Control Panel\Desktop" /v UserPreferencesMask /t REG_BINARY /d 9012078010000000 /f
+reg add "HKEY_CURRENT_USER\Control Panel\Desktop\WindowMetrics" /v MinAnimate /t REG_SZ /d 0 /f
+reg add "HKEY_CURRENT_USER\Control Panel\Keyboard" /v KeyboardDelay /t REG_SZ /d 0 /f
+reg add "HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v ListviewAlphaSelect /t REG_DWORD /d 0 /f
+reg add "HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v ListviewShadow /t REG_DWORD /d 0 /f
+reg add "HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v TaskbarAnimations /t REG_DWORD /d 0 /f  
+reg add "HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects" /v VisualFXSetting /t REG_DWORD /d 2 /f
+reg add "HKEY_CURRENT_USER\Software\Microsoft\Windows\DWM" /v EnableAeroPeek /t REG_DWORD /d 0 /f
 
-if "%opcion%"=="3" goto optimizar_mantener
+REM Deshabilitar animaciones de inicio  
+reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Serialize" /v StartupDelayInMSec /t REG_DWORD /d 0 /f
 
-if "%opcion%"=="4" exit /b
+REM Establecer programa de inicio
+reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run" /v "Optimizar sistema" /t REG_SZ /d "%windir%\system32\cmd.exe /c %~dp0optimizar.bat" /f
 
-:optimizar
+REM Deshabilitar soluciones problemas automáticos
+reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\PCHealth\ErrorReporting" /v DoReport /t REG_DWORD /d 0 /f
+reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\ScriptedDiagnosticsProvider\Policy" /v DisableQueryRemoteServer /t REG_DWORD /d 0 /f  
+reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\ScriptedDiagnosticsProvider\Policy" /v EnableQueryRemoteServer /t REG_DWORD /d 0 /f
 
-echo 🚀 Iniciando optimización...
+REM Deshabilitar telemetría
+reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\DataCollection" /v AllowTelemetry /t REG_DWORD /d 0 /f 
+reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\DataCollection" /v AllowTelemetry /t REG_DWORD /d 0 /f
 
-call :confirmar_optimizar
+REM Deshabilitar servicios innecesarios 
+sc config AarSvc start= disabled
+sc config AJRouter start= disabled
+sc config ALG start= disabled
+REM ...
 
-call :optimizacion
+REM Desactivar tareas programadas innecesarias
+schtasks /change /tn "\Microsoft\Windows\Application Experience\Microsoft Compatibility Appraiser" /disable
+schtasks /change /tn "\Microsoft\Windows\Application Experience\ProgramDataUpdater" /disable 
+schtasks /change /tn "\Microsoft\Windows\Autochk\Proxy" /disable
+REM ...
 
-goto final
+REM Otros comandos útiles
+powercfg -duplicatescheme e9a42b02-d5df-448d-aa00-03f14749eb61  
+cleanmgr /verylowdisk
+compact /compactos:always
+wevtutil cl Setup & wevtutil cl System & wevtutil cl Security & wevtutil cl Application & fsutil usn deletejournal /d C:
 
-:mantener  
-
-echo 🚀 Iniciando mantenimiento...
-
-call :confirmar_mantener
-
-call :mantenimiento
-
-goto final
-
-:optimizar_mantener
-
-echo 🚀 Iniciando optimización y mantenimiento...
-
-call :confirmar_optimizar_mantener
-
-call :optimizacion
-
-call :mantenimiento
-
-goto final
-
-:optimizacion
-
-echo 🔄 Deshabilitando servicios innecesarios...
-
-sc config "wuauserv" start= disabled
-
-sc config "wercplsupport" start= disabled
-
-sc config "RemoteRegistry" start= disabled
-
-sc config "sppsvc" start= disabled
-
-echo ✅ Servicios deshabilitados con éxito.
-
-echo 🔄 Desactivando tareas programadas innecesarias...
-
-schtasks /change /tn "\\Microsoft\\Windows\\WindowsBackup\\AutomaticBackup" /disable
-
-schtasks /change /tn "\\Microsoft\\Windows\\WindowsUpdate\\Automatic App Update" /disable 
-
-schtasks /change /tn "\\Microsoft\\Windows\\DiskDiagnostic\\Microsoft-Windows-DiskDiagnosticDataCollector" /disable
-
-echo ✅ Tareas programadas desactivadas con éxito.
-
-echo 🧹 Liberando memoria RAM...
-
-wmic MEMORYCHUNK WHERE "NOT Allocated" CALL Free
-
-echo 👍 Memoria RAM liberada.
-
-echo 🧹 Limpiando caché DNS... 
-
-ipconfig /flushdns
-
-echo 👍 Caché DNS limpiada.
-
-powercfg -h off
-
-echo 🔌 Hibernación deshabilitada. 
-
-echo 🧹 Deshabilitando indexación de búsqueda...
-
-sc config wsearch start= disabled
-
-echo 👍 Indexación de búsqueda deshabilitada.
-
-echo 🧹 Limpiando prefetch...
-
-del /q /f /s %SYSTEMDRIVE%\Windows\Prefetch\*.*  
-
-echo 👍 Prefetch limpiado.
-
-echo 🧹 Deshabilitando Superfetch...
-
-sc config SysMain start= disabled
-
-echo 👍 Superfetch deshabilitado.
-
-echo 🧹 Limpiando registro...
-
-reg delete "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VolumeCaches" /va /f
-
-echo 👍 Registro limpiado.
-
-goto :eof
+goto menu
 
 :mantenimiento
+cls 
+echo ===============================  
+echo    MANTENIMIENTO REGULAR
+echo ===============================
+call :confirmar_mantenimiento
 
-echo 🔄 Deshabilitando hibernación...
-
-powercfg -h off 
-
-echo ✅ Hibernación deshabilitada.
-
-echo 🔄 Reduciendo tamaño Restore Points...
-
-vssadmin Resize ShadowStorage /On=C: /For=C: /MaxSize=10GB 
-
-echo ✅ Tamaño de Restore Points reducido.
-
-echo 🔄 Revisando integridad de archivos del sistema...
+:: Mantenimiento regular
+REM Reparar archivos dañados 
 sfc /scannow
-echo ✅ Integridad de archivos revisada.
 
-echo 🔄 Reparando componentes de Windows...
+REM Reparar componentes de Windows
 DISM /Online /Cleanup-Image /RestoreHealth
-echo ✅ Componentes de Windows reparados.
 
-goto :eof
+REM Desfragmentar disco 
+defrag /C /H
 
-:retry_command
+REM Limpiar caché DNS
+ipconfig /flushdns
 
-%*
+REM Liberar memoria
+wmic MEMORYCHUNK WHERE "NOT Allocated" CALL Free
 
-if %errorlevel% neq 0 (
-   echo ❌ Error al ejecutar el comando: %*
-   echo Intente nuevamente.
-   exit /b
-)
+REM Limpiar archivos temporales  
+cleanmgr /sagerun:1
 
-goto :eof
+REM Optimizar unidad SSD
+defrag /C /L /V
 
-:confirmar_optimizar 
+REM Reducir tamaño Restore Points 
+vssadmin Resize ShadowStorage /For=C: /On=C: /MaxSize=10GB
 
-echo Confirmación: Se realizará la siguiente optimización:
+REM Reparar permisos archivos sistema
+icacls %windir%\system32\*.* /reset /T 
 
-echo - Deshabilitar servicios innecesarios
+REM Reconstruir índices de búsqueda
+cmd /c start /wait wsreset.exe -q
 
-echo - Desactivar tareas programadas innecesarias
+REM Reparar registro
+chkdsk /f 
+sfc /scannow
+DISM /Online /Cleanup-Image /RestoreHealth  
 
-echo - Liberar memoria RAM  
+REM Otros 
+compact /U /S /A /I /F /Q
+cleanmgr /sagerun:1 
+wevtutil cl Setup & wevtutil cl System & wevtutil cl Security & wevtutil cl Application & fsutil usn deletejournal /d C:
+powercfg -devicequery wake_armed
+powercfg -deviceenablewake "PCI\VEN_10EC&DEV_8168&SUBSYS_816810EC&REV_06\4&1D62F95B&0&00E0"
 
-echo - Limpiar caché DNS
+goto menu
 
-echo - Deshabilitar hibernación 
+:optimizacion_mantenimiento
+cls
+echo ===================================
+echo   OPTIMIZACIÓN Y MANTENIMIENTO
+echo ===================================
+call :confirmar_optimizacion_mantenimiento 
 
-echo - Deshabilitar indexación de búsqueda
+:: Optimización inicial
+REM Comandos de optimización...
 
-echo - Limpiar prefetch
+:: Mantenimiento regular
+REM Comandos de mantenimiento...
 
-echo - Deshabilitar Superfetch
+goto menu
 
-echo - Limpiar registro
+:confirmar_optimizacion
+echo La optimización inicial puede afectar el rendimiento temporalmente.
+set /p continuar=¿Desea continuar? (S/N):
+if /i "%continuar%" neq "S" goto menu
 
-echo.
+:confirmar_mantenimiento  
+echo El mantenimiento regular mejora el rendimiento a largo plazo.
+set /p continuar=¿Desea continuar? (S/N): 
+if /i "%continuar%" neq "S" goto menu
 
-echo 🚨 ¡ADVERTENCIA! Esta acción puede afectar el funcionamiento del sistema. ¿Desea continuar? (S/N)
-
-set /p confirmar=
-
-if /i "%confirmar%" neq "S" exit /b
-
-goto :eof
-
-:confirmar_mantener  
-
-echo Confirmación: Se realizará el siguiente mantenimiento: 
-
-echo - Deshabilitar hibernación
-
-echo - Reducir tamaño Restore Points
-
-echo. 
-
-echo 🚨 ¡ADVERTENCIA! Esta acción puede llevar tiempo. ¿Desea continuar? (S/N)
-
-set /p confirmar=
-
-if /i "%confirmar%" neq "S" exit /b
-
-goto :eof
-
-:confirmar_optimizar_mantener
-
-echo Confirmación: Se realizará la siguiente optimización y mantenimiento:
-
-echo - Deshabilitar servicios innecesarios
-
-echo - Desactivar tareas programadas innecesarias 
-
-echo - Liberar memoria RAM
-
-echo - Limpiar caché DNS
-
-echo - Deshabilitar hibernación
-
-echo - Deshabilitar indexación de búsqueda  
-
-echo - Limpiar prefetch
-
-echo - Deshabilitar Superfetch
-
-echo - Limpiar registro
-
-echo - Reducir tamaño Restore Points
-
-echo.
-
-echo 🚨 ¡ADVERTENCIA! Esta acción puede afectar el funcionamiento del sistema y llevar tiempo. ¿Desea continuar? (S/N) 
-
-set /p confirmar=
-
-if /i "%confirmar%" neq "S" exit /b
-
-goto :eof
-
-:final
-
-echo Proceso finalizado.
-
-timeout 5 > nul
-
-exit /b
+:confirmar_optimizacion_mantenimiento
+echo La optimización y mantenimiento mejoran el rendimiento del sistema.
+set /p continuar=¿Desea continuar? (S/N):
+if /i "%continuar%" neq "S" goto menu
