@@ -166,10 +166,10 @@ set /p continuar=¿Desea continuar? (S/N):
 if /i "%continuar%" neq "S" goto menu
 
 :finalizado
-msg * Se a finalizado el proceso correctamente. *
+choice /m "Proceso finalizado" /c Y /d Y /t 1 /n
 
-:reiniciar 
-msg * ¿Desea reiniciar el equipo para aplicar los cambios? *
-msg * Presione S para Si o N para No *
-set /p reiniciar=
-if /i "%reiniciar%"=="S" shutdown /r /t 0
+:reiniciar
+choice /m "¿Desea reiniciar el equipo para aplicar los cambios?"
+if errorlevel 2 (
+  shutdown /r /t 0
+)
