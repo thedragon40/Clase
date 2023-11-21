@@ -152,6 +152,14 @@ vssadmin Resize ShadowStorage /On=C: /For=C: /MaxSize=10GB
 
 echo ✅ Tamaño de Restore Points reducido.
 
+echo 🔄 Revisando integridad de archivos del sistema...
+sfc /scannow
+echo ✅ Integridad de archivos revisada.
+
+echo 🔄 Reparando componentes de Windows...
+DISM /Online /Cleanup-Image /RestoreHealth
+echo ✅ Componentes de Windows reparados.
+
 goto :eof
 
 :retry_command
