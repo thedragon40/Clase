@@ -1,260 +1,206 @@
 @echo off
 chcp 65001 > nul
-title Optimización y Mantenimiento
+setlocal EnableExtensions EnableDelayedExpansion
 
-:inicio
-cls
-echo ====================
-echo OPTIMIZACIÓN SISTEMA
-echo ====================
-echo. 
-echo 1 - Optimización inicial
-echo 2 - Mantenimiento regular
-echo 3 - Optimización y mantenimiento
-echo 4 - Salir
-echo.
-set /p opcion=Opción: 
-
-if "%opcion%"=="1" goto :confirmar_optimizacion
-if "%opcion%"=="2" goto :confirmar_mantenimiento
-if "%opcion%"=="3" goto :confirmar_optimizacion_mantenimiento
-if "%opcion%"=="4" exit /b
-
-:progreso
-echo %1...
-for /l %%a in (1,1,%2) do (
-  echo Progreso: %%a0%%
-  timeout 1 >nul  
+:: Comprobación de privilegios elevados 
+net session >nul 2>&1
+if %errorLevel% neq 0 (
+    echo Este script requiere privilegios administrativos. Ejecútelo como administrador.
+    pause
+    exit /b 1
 )
 
+:menuPrincipal
 cls
-echo %1 completado.
+echo ---------- MENÚ PRINCIPAL ----------
+echo 1. Optimización 
+echo 2. Mantenimiento
+echo 3. Salir
+
+set /p opcion=Elige una opción: 
+if !opcion! equ 1 call :optimizacion
+if !opcion! equ 2 call :mantenimiento
+if !opcion! equ 3 exit /b
+goto :menuPrincipal
+
+:confirmarEjecucion
+echo.
+set /p confirmacion=¿Desea continuar? (S/N): 
+if /i "!confirmacion!" neq "S" goto :menuPrincipal
+echo.
+
+:confirmarOptimizacion
+echo.
+set /p confirmacion=¿Estás seguro de que quieres optimizar el sistema con el perfil de "%1"? Este perfil hace lo siguiente:
+if "%2"=="optimizarTodos" (
+    call :mostrarDetalles "Todos los perfiles" "optimizarTodos"
+) else (
+    call :mostrarDetalles "%1" "%2"
+)
+echo Elige tu opción: Sí (S) o No (N): 
+set /p confirmacion=
+if /i "!confirmacion!" neq "S" goto :menuPrincipal
+echo.
+
 goto :eof
 
+
 :optimizacion
-cls
-echo ============================  
-echo    OPTIMIZACIÓN
-echo ============================
+cls 
+echo ========= OPTIMIZACIÓN =========
+echo 1. Juegos
+echo 2. Ofimática
+echo 3. Multimedia
+echo 4. Todos
+echo 5. Volver atrás
 
-REM Deshabilitar efectos visuales
-reg add "HKEY_CURRENT_USER\Control Panel\Desktop" /v DragFullWindows /t REG_SZ /d 0 /f
-reg add "HKEY_CURRENT_USER\Control Panel\Desktop" /v MenuShowDelay /t REG_SZ /d 0 /f  
-reg add "HKEY_CURRENT_USER\Control Panel\Desktop" /v UserPreferencesMask /t REG_BINARY /d 9012078010000000 /f
-reg add "HKEY_CURRENT_USER\Control Panel\Desktop\WindowMetrics" /v MinAnimate /t REG_SZ /d 0 /f
-reg add "HKEY_CURRENT_USER\Control Panel\Keyboard" /v KeyboardDelay /t REG_SZ /d 0 /f
-reg add "HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v ListviewAlphaSelect /t REG_DWORD /d 0 /f
-reg add "HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v ListviewShadow /t REG_DWORD /d 0 /f
-reg add "HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v TaskbarAnimations /t REG_DWORD /d 0 /f  
-reg add "HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects" /v VisualFXSetting /t REG_DWORD /d 2 /f
-reg add "HKEY_CURRENT_USER\Software\Microsoft\Windows\DWM" /v EnableAeroPeek /t REG_DWORD /d 0 /f
+set /p perfil=Perfil: 
+if !perfil! equ 1 call :confirmarOptimizacion "Juegos" "optimizarJuegos"
+if !perfil! equ 2 call :confirmarOptimizacion "Ofimática" "optimizarOfimatica"
+if !perfil! equ 3 call :confirmarOptimizacion "Multimedia" "optimizarMultimedia"
+if !perfil! equ 4 call :confirmarOptimizacion "Todos los perfiles" "optimizarTodos"
+if !perfil! equ 5 goto :menuPrincipal
 
-REM Deshabilitar animaciones de inicio  
-reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Serialize" /v StartupDelayInMSec /t REG_DWORD /d 0 /f
-
-REM Establecer programa de inicio
-reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run" /v "Optimizar sistema" /t REG_SZ /d "%windir%\system32\cmd.exe /c %~dp0optimizar.bat" /f
-
-REM Deshabilitar soluciones problemas automáticos
-reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\PCHealth\ErrorReporting" /v DoReport /t REG_DWORD /d 0 /f
-reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\ScriptedDiagnosticsProvider\Policy" /v DisableQueryRemoteServer /t REG_DWORD /d 0 /f  
-reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\ScriptedDiagnosticsProvider\Policy" /v EnableQueryRemoteServer /t REG_DWORD /d 0 /f
-
-REM Deshabilitar telemetría
-reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\DataCollection" /v AllowTelemetry /t REG_DWORD /d 0 /f 
-reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\DataCollection" /v AllowTelemetry /t REG_DWORD /d 0 /f
-
-REM Deshabilitar servicios innecesarios 
-sc config AarSvc start= disabled
-sc config AJRouter start= disabled
-sc config ALG start= disabled
-REM ...
-
-REM Desactivar tareas programadas innecesarias
-schtasks /change /tn "\Microsoft\Windows\Application Experience\Microsoft Compatibility Appraiser" /disable
-schtasks /change /tn "\Microsoft\Windows\Application Experience\ProgramDataUpdater" /disable 
-schtasks /change /tn "\Microsoft\Windows\Autochk\Proxy" /disable
-REM ...
-
-REM Otros comandos útiles
-powercfg -duplicatescheme e9a42b02-d5df-448d-aa00-03f14749eb61  
-cleanmgr /verylowdisk
-wevtutil cl Setup & wevtutil cl System & wevtutil cl Security & wevtutil cl Application & fsutil usn deletejournal /d C:
+goto :menuPrincipal
 
 
-goto :menu
+:ejecutarConConfirmacion
+echo %~1
+call %2
+echo.
+goto :confirmarEjecucion
+
+:optimizarConConfirmacion
+echo.
+echo Detalles de la optimización:
+call :mostrarDetalles %1
+echo.
+call :ejecutarConConfirmacion "¿Desea aplicar esta optimización?" %2
+echo.
+
+goto :menuPrincipal
+
+:mostrarDetalles
+echo %~1
+echo ---------------------------
+if "%2"=="optimizarJuegos" (
+    echo 1. Desactivar servicios innecesarios para juegos.
+    echo    - Se desactivarán servicios en segundo plano que no son esenciales para juegos.
+    echo 2. Ajustar configuración de red para priorizar juegos.
+    echo    - Se realizarán ajustes para dar prioridad a la conexión de red durante juegos.
+    echo 3. Deshabilitar animaciones y efectos visuales.
+    echo    - Se deshabilitarán animaciones y efectos visuales para mejorar el rendimiento.
+) else if "%2"=="optimizarOfimatica" (
+    echo 1. Ajustar configuración visual para mejorar rendimiento en tareas de ofimática.
+    echo    - Se realizarán ajustes visuales para optimizar el rendimiento en tareas de ofimática.
+) else if "%2"=="optimizarMultimedia" (
+    echo 1. Desactivar ahorro de energía en modo de espera para mejorar la reproducción multimedia.
+    echo    - Se desactivará el ahorro de energía en modo de espera para mejorar la reproducción multimedia.
+) else if "%2"=="optimizarTodos" (
+    echo 1. Aplicar todas las optimizaciones disponibles.
+    echo    - Se aplicarán todas las optimizaciones disponibles para mejorar el rendimiento general del sistema.
+) else if "%2"=="limpiarDisco" (
+    echo 1. Limpiar disco eliminando archivos temporales y no necesarios.
+    echo    - Se eliminarán archivos temporales y no necesarios para liberar espacio en disco.
+) else if "%2"=="verificarDisco" (
+    echo 1. Verificar y corregir errores en el disco.
+    echo    - Se realizará una verificación y corrección de errores en el disco.
+) else if "%2"=="escanearSistema" (
+    echo 1. Escanear y reparar archivos del sistema.
+    echo    - Se escanearán y repararán archivos del sistema que estén dañados o faltantes.
+) else if "%2"=="restaurarSaludImagen" (
+    echo 1. Restaurar la salud de la imagen del sistema utilizando DISM.
+    echo    - Se restaurará la salud de la imagen del sistema utilizando la herramienta DISM.
+) else if "%2"=="mantenimientoTodos" (
+    echo 1. Aplicar todas las acciones de mantenimiento disponibles.
+    echo    - Se aplicarán todas las acciones de mantenimiento disponibles para garantizar el buen funcionamiento del sistema.
+) else (
+    REM Agrega más bloques de condiciones según sea necesario
+)
+echo ---------------------------
+echo.
+
+goto :eof
+
+
+:optimizarJuegos
+REM Comandos específicos para optimización de juegos
+sc config "wuauserv" start=disabled || goto :error
+sc config "wudfsvc" start=disabled || goto :error
+netsh int tcp set global autotuninglevel=normal || goto :error
+netsh int tcp set global chimney=enabled || goto :error
+echo Optimización completa para juegos.
+goto :eof
+
+:optimizarOfimatica
+REM Comandos específicos para optimización de ofimática
+reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects" /v VisualFXSetting /t REG_DWORD /d 2 /f || goto :error
+echo Optimización completa para ofimática.
+goto :eof
+
+:optimizarMultimedia
+REM Comandos específicos para optimización multimedia
+powercfg -setacvalueindex SCHEME_CURRENT SUB_SLEEP STANDBYIDLE 0 || goto :error
+powercfg -setacvalueindex SCHEME_CURRENT SUB_SLEEP STANDBYIDLE 0 || goto :error
+echo Optimización completa para multimedia.
+goto :eof
+
+:optimizarTodos
+call :optimizarJuegos
+call :optimizarOfimatica
+call :optimizarMultimedia
+goto :eof
 
 :mantenimiento
-cls 
-echo =========================
-echo    MANTENIMIENTO
-echo =========================
-
-REM Reparar archivos dañados 
-sfc /scannow
-
-REM Reparar componentes de Windows
-DISM /Online /Cleanup-Image /RestoreHealth
-
-REM Desfragmentar disco 
-defrag /C /H
-
-REM Limpiar caché DNS
-ipconfig /flushdns
-
-REM Liberar memoria
-wmic MEMORYCHUNK WHERE "NOT Allocated" CALL Free
-
-REM Limpiar archivos temporales  
-cleanmgr /sagerun:1
-
-REM Optimizar unidad SSD
-defrag /C /L /V
-
-REM Reducir tamaño Restore Points 
-vssadmin Resize ShadowStorage /For=C: /On=C: /MaxSize=10GB
-
-REM Reparar permisos archivos sistema
-icacls %windir%\system32\*.* /reset /T 
-
-REM Reconstruir índices de búsqueda
-cmd /c start /wait wsreset.exe -q
-
-REM Reparar registro
-chkdsk /f 
-sfc /scannow
-DISM /Online /Cleanup-Image /RestoreHealth  
-
-REM Otros 
-compact /U /S /A /I /F /Q
-cleanmgr /sagerun:1 
-wevtutil cl Setup & wevtutil cl System & wevtutil cl Security & wevtutil cl Application & fsutil usn deletejournal /d C:
-powercfg -devicequery wake_armed
-powercfg -deviceenablewake "PCI\VEN_10EC&DEV_8168&SUBSYS_816810EC&REV_06\4&1D62F95B&0&00E0"
-
-goto :menu
-
-:optimizacion_mantenimiento
 cls
-echo ===================================
-echo   OPTIMIZACIÓN Y MANTENIMIENTO
-echo ===================================
+echo ========= MANTENIMIENTO =========
+echo 1. Limpiar disco
+echo 2. Verificar disco
+echo 3. Escanear archivos del sistema
+echo 4. Restaurar salud de la imagen del sistema
+echo 5. Todos
 
-REM Deshabilitar efectos visuales
-reg add "HKEY_CURRENT_USER\Control Panel\Desktop" /v DragFullWindows /t REG_SZ /d 0 /f
-reg add "HKEY_CURRENT_USER\Control Panel\Desktop" /v MenuShowDelay /t REG_SZ /d 0 /f  
-reg add "HKEY_CURRENT_USER\Control Panel\Desktop" /v UserPreferencesMask /t REG_BINARY /d 9012078010000000 /f
-reg add "HKEY_CURRENT_USER\Control Panel\Desktop\WindowMetrics" /v MinAnimate /t REG_SZ /d 0 /f
-reg add "HKEY_CURRENT_USER\Control Panel\Keyboard" /v KeyboardDelay /t REG_SZ /d 0 /f
-reg add "HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v ListviewAlphaSelect /t REG_DWORD /d 0 /f
-reg add "HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v ListviewShadow /t REG_DWORD /d 0 /f
-reg add "HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced" /v TaskbarAnimations /t REG_DWORD /d 0 /f  
-reg add "HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects" /v VisualFXSetting /t REG_DWORD /d 2 /f
-reg add "HKEY_CURRENT_USER\Software\Microsoft\Windows\DWM" /v EnableAeroPeek /t REG_DWORD /d 0 /f
+set /p mantenimiento=Mantenimiento:
+if !mantenimiento! equ 1 call :confirmarEjecucion "Limpiar disco" limpiarDisco
+if !mantenimiento! equ 2 call :confirmarEjecucion "Verificar disco" verificarDisco
+if !mantenimiento! equ 3 call :confirmarEjecucion "Escanear archivos del sistema" escanearSistema
+if !mantenimiento! equ 4 call :confirmarEjecucion "Restaurar salud de la imagen del sistema" restaurarSaludImagen
+if !mantenimiento! equ 5 call :confirmarEjecucion "Aplicar todas las acciones de mantenimiento" mantenimientoTodos
 
-REM Deshabilitar animaciones de inicio  
-reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Serialize" /v StartupDelayInMSec /t REG_DWORD /d 0 /f
+goto :menuPrincipal
 
-REM Establecer programa de inicio
-reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\StartupApproved\Run" /v "Optimizar sistema" /t REG_SZ /d "%windir%\system32\cmd.exe /c %~dp0optimizar.bat" /f
+:limpiarDisco
+REM Comandos específicos para limpiar disco
+cleanmgr /sagerun:1 || goto :error
+echo Limpiar disco completo.
+goto :eof
 
-REM Deshabilitar soluciones problemas automáticos
-reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\PCHealth\ErrorReporting" /v DoReport /t REG_DWORD /d 0 /f
-reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\ScriptedDiagnosticsProvider\Policy" /v DisableQueryRemoteServer /t REG_DWORD /d 0 /f  
-reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\ScriptedDiagnosticsProvider\Policy" /v EnableQueryRemoteServer /t REG_DWORD /d 0 /f
+:verificarDisco
+REM Comandos específicos para verificar disco
+chkdsk /f || goto :error
+echo Verificación de disco completa.
+goto :eof
 
-REM Deshabilitar telemetría
-reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\DataCollection" /v AllowTelemetry /t REG_DWORD /d 0 /f 
-reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\DataCollection" /v AllowTelemetry /t REG_DWORD /d 0 /f
+:escanearSistema
+REM Comandos específicos para escanear archivos del sistema
+sfc /scannow || goto :error
+echo Escaneo de archivos del sistema completo.
+goto :eof
 
-REM Deshabilitar servicios innecesarios 
-sc config AarSvc start= disabled
-sc config AJRouter start= disabled
-sc config ALG start= disabled
-REM ...
+:restaurarSaludImagen
+REM Comandos específicos para restaurar salud de la imagen del sistema
+DISM /Online /Cleanup-Image /RestoreHealth || goto :error
+echo Restauración de salud de la imagen del sistema completa.
+goto :eof
 
-REM Desactivar tareas programadas innecesarias
-schtasks /change /tn "\Microsoft\Windows\Application Experience\Microsoft Compatibility Appraiser" /disable
-schtasks /change /tn "\Microsoft\Windows\Application Experience\ProgramDataUpdater" /disable 
-schtasks /change /tn "\Microsoft\Windows\Autochk\Proxy" /disable
+:mantenimientoTodos
+call :limpiarDisco
+call :verificarDisco
+call :escanearSistema
+call :restaurarSaludImagen
+goto :eof
 
-REM Añadir esquema de maximo rendimiento:
-powercfg -duplicatescheme e9a42b02-d5df-448d-aa00-03f14749eb61  
-
-wevtutil cl Setup & wevtutil cl System & wevtutil cl Security & wevtutil cl Application & fsutil usn deletejournal /d C:
-
-REM Reparar archivos dañados 
-sfc /scannow
-
-REM Reparar componentes de Windows
-DISM /Online /Cleanup-Image /RestoreHealth
-
-REM Desfragmentar disco 
-defrag /C /H /U /V
-
-REM Limpiar caché DNS
-ipconfig /flushdns
-
-REM Liberar memoria
-wmic MEMORYCHUNK WHERE "NOT Allocated" CALL Free
-
-REM Limpiar archivos temporales  
-cleanmgr /sagerun:1
-
-REM Optimizar unidad SSD
-defrag /C /L /V
-
-REM Reducir tamaño Restore Points 
-vssadmin Resize ShadowStorage /For=C: /On=C: /MaxSize=10GB
-
-REM Reparar permisos archivos sistema
-icacls %windir%\system32\*.* /reset /T 
-
-REM Reconstruir índices de búsqueda
-cmd /c start /wait wsreset.exe -q
-
-REM Reparar registro
-chkdsk /f 
-sfc /scannow
-DISM /Online /Cleanup-Image /RestoreHealth  
-
-REM Otros 
-compact /U /S /A /I /F /Q
-cleanmgr /sagerun:1 
-wevtutil cl Setup & wevtutil cl System & wevtutil cl Security & wevtutil cl Application & fsutil usn deletejournal /d C:
-powercfg -devicequery wake_armed
-powercfg -deviceenablewake "PCI\VEN_10EC&DEV_8168&SUBSYS_816810EC&REV_06\4&1D62F95B&0&00E0"
-
-goto :menu
-
-:confirmar_optimizacion
-echo La optimización inicial puede afectar el rendimiento temporalmente.
-set /p continuar=¿Desea continuar? (S/N):
-if /i not "%continuar%"=="S" goto :menu
-goto :optimizacion
-
-:confirmar_mantenimiento   
-echo El mantenimiento regular mejora el rendimiento a largo plazo.
-set /p continuar=¿Desea continuar? (S/N): 
-if /i not "%continuar%"=="S" goto :menu
-goto :mantenimiento
-
-:confirmar_optimizacion_mantenimiento
-echo La optimización y mantenimiento mejoran el rendimiento del sistema.
-set /p continuar=¿Desea continuar? (S/N):
-if /i not "%continuar%"=="S" goto :menu
-goto :optimizacion_mantenimiento
-
-:finalizado 
-echo.
-echo Proceso finalizado.
-
-
-:reiniciar
-echo ¿Desea reiniciar el equipo para aplicar los cambios? Sí (S) o No (N)
-set /p reiniciar=Opción: 
-if /i "%reiniciar%"=="S" (
-  shutdown /r /t 0
-) else (
-  goto :inicio
-)
+:error
+echo Error al aplicar configuración.
+pause
+exit /b
