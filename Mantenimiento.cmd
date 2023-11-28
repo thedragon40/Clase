@@ -74,7 +74,7 @@ exit
 echo.
 echo Desfragmentando y optimizando unidades...
 echo.
-defrag /U /V
+defrag C: /U /V
 echo.
 echo Desfragmentacion y optimizacion de unidades finalizada.
 echo.
