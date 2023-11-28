@@ -10,126 +10,143 @@ if %errorLevel% neq 0 (
   exit /b 1
 )
 
-:menuPrincipal
-cls
-echo ---------- MENÚ PRINCIPAL ----------
-echo 1. Optimización
-echo 2. Mantenimiento
-echo 3. Salir
-set /p opcion=Elige una opción:
-if "%opcion%"=="1" call :optimizacion
-if "%opcion%"=="2" call :mantenimiento 
-if "%opcion%"=="3" exit /b
-goto :menuPrincipal
+echo 1. Limpiar archivos temporales
+echo 2. Limpiar archivos temporales de Internet Explorer
+echo 3. Limpiar archivos temporales de archivos descargados
+echo 4. Limpiar archivos temporales de actualizaciones de Windows
+echo 5. Desfragmentar y optimizar unidades
+echo 6. Comprobar y reparar errores en la unidad del sistema
+echo 7. Eliminar archivos temporales del sistema de Windows
+echo 8. Limpiar la caché de archivos temporales de Internet Explorer
+echo 9. Desactivar el seguimiento de usuario de Windows
+echo 10. Eliminar historial de navegación de Internet Explorer
+echo 11. Salir
+echo.
+set /p option= Seleccione una opcion:
 
-:optimizacion
-cls
-echo ========= OPTIMIZACIÓN =========
-echo 1. Juegos
-echo 2. Ofimática   
-echo 3. Multimedia
-echo 4. Todos  
-echo 5. Volver atrás
-set /p perfil=Perfil:  
-if "%perfil%"=="1" call :confirmarOptimizacion "Juegos" "optimizarJuegos"
-if "%perfil%"=="2" call :confirmarOptimizacion "Ofimática" "optimizarOfimatica"
-if "%perfil%"=="3" call :confirmarOptimizacion "Multimedia" "optimizarMultimedia" 
-if "%perfil%"=="4" call :confirmarOptimizacion "Todos los perfiles" "optimizarTodos"
-if "%perfil%"=="5" goto :menuPrincipal
-goto :menuPrincipal
+if %option%==1 goto :Option1
+if %option%==2 goto :Option2
+if %option%==3 goto :Option3
+if %option%==4 goto :Option4
+if %option%==5 goto :Option5
+if %option%==6 goto :Option6
+if %option%==7 goto :Option7
+if %option%==8 goto :Option8
+if %option%==9 goto :Option9
+if %option%==10 goto :Option10
+if %option%==11 goto :Exit
 
-:optimizarJuegos
-REM Comandos específicos para optimización de juegos
-sc config "wuauserv" start=disabled || goto :error
-sc config "wudfsvc" start=disabled || goto :error  
-netsh int tcp set global autotuninglevel=normal || goto :error
-netsh int tcp set global chimney=enabled || goto :error
-bcdedit /set {default} bootmenupolicy legacy
-reg add "HKCU\Control Panel\Desktop" /v UserPreferencesMask /t REG_BINARY /d 9e3e678f /f
-powercfg -h off
-echo Optimización completa para juegos.
-goto :eof
-
-:optimizarOfimatica
-REM Comandos específicos para optimización de ofimática
-reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\VisualEffects" /v VisualFXSetting /t REG_DWORD /d 2 /f || goto :error
-reg add "HKCU\Control Panel\Desktop" /v UserPreferencesMask /t REG_BINARY /d 9e3e678f /f
-reg add "HKCU\Control Panel\Desktop\WindowMetrics" /v MinAnimate /t REG_SZ /d 0 /f
-echo Optimización completa para ofimática.
-goto :eof
-
-:optimizarMultimedia
-REM Comandos específicos para optimización multimedia 
-powercfg -setacvalueindex SCHEME_CURRENT SUB_SLEEP STANDBYIDLE 0 || goto :error
-powercfg -setacvalueindex SCHEME_CURRENT SUB_SLEEP STANDBYIDLE 0 || goto :error   
-powercfg -setactive SCHEME_MIN
-echo Optimización completa para multimedia.
-goto :eof
-
-:mantenimiento
-cls 
-echo ========= MANTENIMIENTO =========
-echo 1. Limpiar disco   
-echo 2. Verificar disco
-echo 3. Escanear archivos del sistema   
-echo 4. Restaurar salud de la imagen del sistema
-echo 5. Desfragmentar disco
-echo 6. Limpiar caché DNS
-echo 7. Reconstruir índices de búsqueda
-echo 8. Reparar MBR
-echo 9. Reparar BCD
-echo 10. Todos
-set /p mantenimiento=Mantenimiento:   
-if "%mantenimiento%"=="1" call :confirmarEjecucion "Limpiar disco" limpiarDisco
-if "%mantenimiento%"=="2" call :confirmarEjecucion "Verificar disco" verificarDisco
-if "%mantenimiento%"=="3" call :confirmarEjecucion "Escanear archivos del sistema" escanearSistema 
-if "%mantenimiento%"=="4" call :confirmarEjecucion "Restaurar salud de la imagen del sistema" restaurarSaludImagen   
-if "%mantenimiento%"=="5" call :confirmarEjecucion "Desfragmentar disco" desfragmentarDisco
-if "%mantenimiento%"=="6" call :confirmarEjecucion "Limpiar caché DNS" limpiarDNS
-if "%mantenimiento%"=="7" call :confirmarEjecucion "Reconstruir índices de búsqueda" reconstruirIndices 
-if "%mantenimiento%"=="8" call :confirmarEjecucion "Reparar MBR" repararMBR
-if "%mantenimiento%"=="9" call :confirmarEjecucion "Reparar BCD" repararBCD
-if "%mantenimiento%"=="10" call :confirmarEjecucion "Aplicar todas las acciones de mantenimiento" mantenimientoTodos
-goto :menuPrincipal
-
-:desfragmentarDisco
-defrag C: /U /V
-echo Desfragmentación de disco completa.
-goto :eof
-
-:limpiarDNS
-ipconfig /flushdns
-echo Limpieza de caché DNS completa.
-goto :eof
-
-:reconstruirIndices  
-chkdsk /f /r
-echo Reconstrucción de índices de búsqueda completa.
-goto :eof
-
-:repararMBR
-bootrec /fixmbr  
-echo Reparación de MBR completa.
-goto :eof
-
-:repararBCD
-bcdboot C:\Windows /s C: /f ALL  
-echo Reparación de BCD completa. 
-goto :eof
-
-:mantenimientoTodos
-call :limpiarDisco
-call :verificarDisco
-call :escanearSistema
-call :restaurarSaludImagen
-call :desfragmentarDisco  
-call :limpiarDNS
-call :reconstruirIndices
-call :repararMBR
-call :repararBCD
-goto :eof
-
-:error 
-echo Error al aplicar configuración.
+:Option1
+echo.
+echo Limpiando archivos temporales...
+echo.
+del /s /q %temp%\*.*
+del /s /q %windir%\Temp\*.*
+echo.
+echo Limpieza de archivos temporales finalizada.
+echo.
 pause
-exit /b
+exit
+
+:Option2
+echo.
+echo Limpiando archivos temporales de Internet Explorer...
+echo.
+RunDll32.exe InetCpl.cpl,ClearMyTracksByProcess 8
+echo.
+echo Limpieza de archivos temporales de Internet Explorer finalizada.
+echo.
+pause
+exit
+
+:Option3
+echo.
+echo Limpiando archivos temporales de archivos descargados...
+echo.
+del /s /q %userprofile%\Downloads\*.*
+echo.
+echo Limpieza de archivos temporales de archivos descargados finalizada.
+echo.
+pause
+exit
+
+:Option4
+echo.
+echo Limpiando archivos temporales de actualizaciones de Windows...
+echo.
+del /s /q %windir%\SoftwareDistribution\Download\*.*
+echo.
+echo Limpieza de archivos temporales de actualizaciones de Windows finalizada.
+echo.
+pause
+exit
+
+:Option5
+echo.
+echo Desfragmentando y optimizando unidades...
+echo.
+defrag /U /V
+echo.
+echo Desfragmentacion y optimizacion de unidades finalizada.
+echo.
+pause
+exit
+
+:Option6
+echo.
+echo Comprobando y reparando errores en la unidad del sistema...
+echo.
+sfc /scannow
+echo.
+echo Comprobacion y reparacion de errores en la unidad del sistema finalizada.
+echo.
+pause
+exit
+
+:Option7
+echo.
+echo Eliminando archivos temporales del sistema de Windows...
+echo.
+del /s /q %windir%\Prefetch\*.*
+del /s /q %windir%\Temp\*.*
+echo.
+echo Eliminacion de archivos temporales del sistema de Windows finalizada.
+echo.
+pause
+exit
+
+:Option8
+echo.
+echo Limpiando la caché de archivos temporales de Internet Explorer...
+echo.
+RunDll32.exe InetCpl.cpl,ClearMyTracksByProcess 2
+echo.
+echo Limpieza de la caché de archivos temporales de Internet Explorer finalizada.
+echo.
+pause
+exit
+
+:Option9
+echo.
+echo Desactivando el seguimiento de usuario de Windows...
+echo.
+reg add "HKEY_CURRENT_USER\Software\Policies\Microsoft\Windows\System" /v "EnableActivityFeed" /t REG_DWORD /d "0" /f
+echo.
+echo Desactivacion del seguimiento de usuario de Windows finalizada.
+echo.
+pause
+exit
+
+:Option10
+echo.
+echo Eliminando historial de navegación de Internet Explorer...
+echo.
+RunDll32.exe InetCpl.cpl,ClearMyTracksByProcess 1
+echo.
+echo Eliminacion del historial de navegacion de Internet Explorer finalizada.
+echo.
+pause
+exit
+
+:Exit
+exit
