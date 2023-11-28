@@ -19,7 +19,7 @@ echo 6. Eliminar archivos temporales del sistema de Windows
 echo 7. Limpiar la caché de archivos temporales de Internet Explorer
 echo 8. Desactivar el seguimiento de usuario de Windows
 echo 9. Eliminar historial de navegación de Internet Explorer
-echo 10. Todas las anteriores
+echo 10. Todos los anteriores
 echo 11. Salir
 echo.
 set /p option= Seleccione una opcion:
@@ -33,7 +33,7 @@ if %option%==6 goto :Option6
 if %option%==7 goto :Option7
 if %option%==8 goto :Option8
 if %option%==9 goto :Option9
-if %option%==10 goto :Option10
+if %option%==10 goto :OptionAll
 if %option%==11 goto :Exit
 
 :Option1
@@ -72,11 +72,40 @@ exit
 
 :Option4
 echo.
-echo Desfragmentando y optimizando unidades...
+echo Selecciona una unidad para desfragmentar y optimizar:
 echo.
-defrag C: /U /V
+call :ListDrives
+set /p drive= Seleccione una unidad o escriba "Todas": 
+
+if /i "%drive%"=="Todas" goto :DefragAll
+if not exist %drive% goto :InvalidDrive
+
 echo.
-echo Desfragmentacion y optimizacion de unidades finalizada.
+echo Desfragmentando y optimizando unidad %drive%...
+echo.
+defrag %drive% /U /V
+echo.
+echo Desfragmentacion y optimizacion de unidad %drive% finalizada.
+echo.
+pause
+exit
+
+:DefragAll
+echo.
+echo Desfragmentando y optimizando todas las unidades...
+echo.
+for /f "tokens=2" %%i in ('wmic logicaldisk get caption') do (
+  defrag %%i /U /V
+)
+echo.
+echo Desfragmentacion y optimizacion de todas las unidades finalizada.
+echo.
+pause
+exit
+
+:InvalidDrive
+echo.
+echo Unidad no válida. Por favor, seleccione una unidad válida.
 echo.
 pause
 exit
@@ -137,7 +166,7 @@ echo.
 pause
 exit
 
-:Option10
+:OptionAll
 echo.
 echo Ejecutando todas las opciones anteriores...
 echo.
@@ -146,7 +175,6 @@ echo.
 del /s /q %temp%\*.*
 RunDll32.exe InetCpl.cpl,ClearMyTracksByProcess 8
 del /s /q %windir%\SoftwareDistribution\Download\*.*
-defrag /U /V
 sfc /scannow
 del /s /q %windir%\Prefetch\*.*
 RunDll32.exe InetCpl.cpl,ClearMyTracksByProcess 2
@@ -161,3 +189,11 @@ exit
 
 :Exit
 exit
+
+:ListDrives
+echo.
+for /f "tokens=2" %%i in ('wmic logicaldisk get caption') do (
+  echo %%i
+)
+echo.
+exit /b
