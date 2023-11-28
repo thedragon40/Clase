@@ -12,16 +12,15 @@ if %errorLevel% neq 0 (
 
 echo 1. Limpiar archivos temporales
 echo 2. Limpiar archivos temporales de Internet Explorer
-echo 3. Limpiar archivos temporales de archivos descargados
-echo 4. Limpiar archivos temporales de actualizaciones de Windows
-echo 5. Desfragmentar y optimizar unidades
-echo 6. Comprobar y reparar errores en la unidad del sistema
-echo 7. Eliminar archivos temporales del sistema de Windows
-echo 8. Limpiar la caché de archivos temporales de Internet Explorer
-echo 9. Desactivar el seguimiento de usuario de Windows
-echo 10. Eliminar historial de navegación de Internet Explorer
-echo 11. Todas las anteriores
-echo 12. Salir
+echo 3. Limpiar archivos temporales de actualizaciones de Windows
+echo 4. Desfragmentar y optimizar unidades
+echo 5. Comprobar y reparar errores en la unidad del sistema
+echo 6. Eliminar archivos temporales del sistema de Windows
+echo 7. Limpiar la caché de archivos temporales de Internet Explorer
+echo 8. Desactivar el seguimiento de usuario de Windows
+echo 9. Eliminar historial de navegación de Internet Explorer
+echo 10. Todas las anteriores
+echo 11. Salir
 echo.
 set /p option= Seleccione una opcion:
 
@@ -35,8 +34,7 @@ if %option%==7 goto :Option7
 if %option%==8 goto :Option8
 if %option%==9 goto :Option9
 if %option%==10 goto :Option10
-if %option%==11 goto :OptionAll
-if %option%==12 goto :Exit
+if %option%==11 goto :Exit
 
 :Option1
 echo.
@@ -63,17 +61,6 @@ exit
 
 :Option3
 echo.
-echo Limpiando archivos temporales de archivos descargados...
-echo.
-del /s /q %userprofile%\Downloads\*.*
-echo.
-echo Limpieza de archivos temporales de archivos descargados finalizada.
-echo.
-pause
-exit
-
-:Option4
-echo.
 echo Limpiando archivos temporales de actualizaciones de Windows...
 echo.
 del /s /q %windir%\SoftwareDistribution\Download\*.*
@@ -83,7 +70,7 @@ echo.
 pause
 exit
 
-:Option5
+:Option4
 echo.
 echo Desfragmentando y optimizando unidades...
 echo.
@@ -94,7 +81,7 @@ echo.
 pause
 exit
 
-:Option6
+:Option5
 echo.
 echo Comprobando y reparando errores en la unidad del sistema...
 echo.
@@ -105,7 +92,7 @@ echo.
 pause
 exit
 
-:Option7
+:Option6
 echo.
 echo Eliminando archivos temporales del sistema de Windows...
 echo.
@@ -117,7 +104,7 @@ echo.
 pause
 exit
 
-:Option8
+:Option7
 echo.
 echo Limpiando la caché de archivos temporales de Internet Explorer...
 echo.
@@ -128,7 +115,7 @@ echo.
 pause
 exit
 
-:Option9
+:Option8
 echo.
 echo Desactivando el seguimiento de usuario de Windows...
 echo.
@@ -139,7 +126,7 @@ echo.
 pause
 exit
 
-:Option10
+:Option9
 echo.
 echo Eliminando historial de navegación de Internet Explorer...
 echo.
@@ -150,20 +137,18 @@ echo.
 pause
 exit
 
-:OptionAll
+:Option10
 echo.
 echo Ejecutando todas las opciones anteriores...
 echo.
 
-:: Incluye aquí los comandos de cada opción individual.
+:: Incluye aquí los comandos de cada opción individual excepto la eliminación de archivos de descargas.
 del /s /q %temp%\*.*
 RunDll32.exe InetCpl.cpl,ClearMyTracksByProcess 8
-del /s /q %userprofile%\Downloads\*.*
 del /s /q %windir%\SoftwareDistribution\Download\*.*
 defrag /U /V
 sfc /scannow
 del /s /q %windir%\Prefetch\*.*
-del /s /q %windir%\Temp\*.*
 RunDll32.exe InetCpl.cpl,ClearMyTracksByProcess 2
 reg add "HKEY_CURRENT_USER\Software\Policies\Microsoft\Windows\System" /v "EnableActivityFeed" /t REG_DWORD /d "0" /f
 RunDll32.exe InetCpl.cpl,ClearMyTracksByProcess 1
