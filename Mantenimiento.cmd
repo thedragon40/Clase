@@ -20,7 +20,8 @@ echo 7. Eliminar archivos temporales del sistema de Windows
 echo 8. Limpiar la caché de archivos temporales de Internet Explorer
 echo 9. Desactivar el seguimiento de usuario de Windows
 echo 10. Eliminar historial de navegación de Internet Explorer
-echo 11. Salir
+echo 11. Todas las anteriores
+echo 12. Salir
 echo.
 set /p option= Seleccione una opcion:
 
@@ -34,7 +35,8 @@ if %option%==7 goto :Option7
 if %option%==8 goto :Option8
 if %option%==9 goto :Option9
 if %option%==10 goto :Option10
-if %option%==11 goto :Exit
+if %option%==11 goto :OptionAll
+if %option%==12 goto :Exit
 
 :Option1
 echo.
@@ -144,6 +146,30 @@ echo.
 RunDll32.exe InetCpl.cpl,ClearMyTracksByProcess 1
 echo.
 echo Eliminacion del historial de navegacion de Internet Explorer finalizada.
+echo.
+pause
+exit
+
+:OptionAll
+echo.
+echo Ejecutando todas las opciones anteriores...
+echo.
+
+:: Incluye aquí los comandos de cada opción individual.
+del /s /q %temp%\*.*
+RunDll32.exe InetCpl.cpl,ClearMyTracksByProcess 8
+del /s /q %userprofile%\Downloads\*.*
+del /s /q %windir%\SoftwareDistribution\Download\*.*
+defrag /U /V
+sfc /scannow
+del /s /q %windir%\Prefetch\*.*
+del /s /q %windir%\Temp\*.*
+RunDll32.exe InetCpl.cpl,ClearMyTracksByProcess 2
+reg add "HKEY_CURRENT_USER\Software\Policies\Microsoft\Windows\System" /v "EnableActivityFeed" /t REG_DWORD /d "0" /f
+RunDll32.exe InetCpl.cpl,ClearMyTracksByProcess 1
+
+echo.
+echo Todas las anteriores ejecutadas.
 echo.
 pause
 exit
