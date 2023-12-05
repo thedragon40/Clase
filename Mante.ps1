@@ -1,95 +1,61 @@
-# Script de mantenimiento de Windows
+# MantenimientoPC.ps1
 
-# Ejecutar como administrador
-if (-not ([Security.Principal.WindowsPrincipal]::GetCurrent().IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator))) {
-    Write-Host "Este script debe ejecutarse con privilegios de administrador."
-    exit
+# Función para desfragmentar el disco
+function Desfragmentar-Disco {
+    Write-Host "Desfragmentando el disco..."
+    Optimize-Volume -DriveLetter C -Defrag -Verbose
 }
 
-# Declarar variables
-$selectedFunctions = ""
-
-# Mostrar lista de funciones 
-Write-Host "Funciones disponibles:"
-Write-Host "1. Actualizar Windows"
-Write-Host "2. Buscar y eliminar virus y malware"
-Write-Host "3. Liberar espacio en disco"
-Write-Host "4. Optimizar el registro de Windows"
-Write-Host "5. Desfragmentar el disco duro"
-Write-Host "6. Reparar archivos de sistema"
-Write-Host "7. Eliminar archivos temporales"
-Write-Host "8. Desinstalar programas no deseados"
-Write-Host "9. Reiniciar el sistema"
-
-# Leer la selección del usuario
-Write-Host "Escribe los números de las funciones que deseas ejecutar (separadas por espacios): "
-$selectedFunctions = Read-Host
-
-# Validar selección 
-if ($selectedFunctions -eq "") {
-    Write-Host "Error: Selecciona al menos una función."
-    exit
+# Función para limpiar archivos temporales
+function Limpiar-Temporales {
+    Write-Host "Limpiando archivos temporales..."
+    Remove-Item -Path "$env:TEMP\*" -Force -Recurse
 }
 
-# Ejecutar las funciones seleccionadas
-$selectedFunctionsArray = $selectedFunctions.Split(" ")
-foreach ($function in $selectedFunctionsArray) {
-    switch ($function) {
-        case"1": 
-            {
-                Write-Host "Actualizando Windows..."
-                Start-Process "wuauclt.exe" -ArgumentList "/updatenow"
-            }
-            break
-        case"2":
-            {
-                Write-Host "Buscando y eliminando virus y malware..." 
-                Start-Process "msconfig.exe" -ArgumentList "/scannow"
-            }
-            break
-        case"3":
-            {
-                Write-Host "Liberando espacio en disco..."
-                Start-Process "cleanmgr.exe" -ArgumentList "/sageset:65535 /d %windir%\System32\config\systemprofile\AppData\Local\Temp /d %windir%\System32\config\systemprofile\AppData\Local\Microsoft\Windows\Temporary Internet Files /d %windir%\System32\config\systemprofile\AppData\Local\Microsoft\Windows\SoftwareDistribution\Download"
-            }
-            break
-        case"4":
-            {
-                Write-Host "Optimizando el registro de Windows..."
-                Start-Process "regedit.exe" -ArgumentList "/s %~dp0\optimize_registry.reg"
-            }
-            break
-        case"5":
-            {
-                Write-Host "Desfragmentando el disco duro..." 
-                Start-Process "dfrg.msc"
-            }
-            break
-        case"6":
-            {
-                Write-Host "Reparando archivos de sistema..."
-                Start-Process "sfc.exe" -ArgumentList "/scannow"
-            }
-            break
-        case"7":
-            {
-                Write-Host "Eliminando archivos temporales..."
-                Start-Process "cmd.exe" -ArgumentList "/c del /q /f %windir%\Temp\*"  
-            }
-            break
-        case"8":
-            {
-                Write-Host "Desinstalando programas no deseados..."
-                Start-Process "appwiz.cpl"
-            }
-            break
-        case"9": 
-            {
-                Write-Host "Reiniciando el sistema..."
-                Start-Process "shutdown.exe" -ArgumentList "/r /t 0"
-            }
-            break
-        default:
-            Write-Host "Función no válida."
+# Función para verificar y reparar errores en el disco
+function Verificar-Errores-Disco {
+    Write-Host "Verificando y reparando errores en el disco..."
+    Repair-Volume -DriveLetter C -Verbose
+}
+
+# Función para actualizar el sistema
+function Actualizar-Sistema {
+    Write-Host "Actualizando el sistema..."
+    Start-Process "ms-settings:windowsupdate" -Wait
+}
+
+# Función para realizar un escaneo de seguridad con Windows Defender
+function Escanear-Seguridad {
+    Write-Host "Realizando escaneo de seguridad con Windows Defender..."
+    Start-MpScan -ScanType QuickScan
+}
+
+# Menú principal
+function Mostrar-Menu {
+    Clear-Host
+    Write-Host "==== Menú de Mantenimiento ===="
+    Write-Host "1. Desfragmentar el disco"
+    Write-Host "2. Limpiar archivos temporales"
+    Write-Host "3. Verificar y reparar errores en el disco"
+    Write-Host "4. Actualizar el sistema"
+    Write-Host "5. Escanear seguridad con Windows Defender"
+    Write-Host "6. Salir"
+}
+
+# Ejecución del programa
+do {
+    Mostrar-Menu
+    $opcion = Read-Host "Ingrese el número de la opción deseada"
+
+    switch ($opcion) {
+        1 { Desfragmentar-Disco }
+        2 { Limpiar-Temporales }
+        3 { Verificar-Errores-Disco }
+        4 { Actualizar-Sistema }
+        5 { Escanear-Seguridad }
+        6 { break }
+        default { Write-Host "Opción no válida. Inténtelo de nuevo." }
     }
-}
+
+    $continuar = Read-Host "Presione cualquier tecla para continuar o 'q' para salir"
+} while ($continuar -ne 'q')
