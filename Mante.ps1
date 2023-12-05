@@ -35,55 +35,55 @@ if ($selectedFunctions -eq "") {
 $selectedFunctionsArray = $selectedFunctions.Split(" ")
 foreach ($function in $selectedFunctionsArray) {
     switch ($function) {
-        case "1": 
+        case"1": 
             {
                 Write-Host "Actualizando Windows..."
                 Start-Process "wuauclt.exe" -ArgumentList "/updatenow"
             }
             break
-        case "2":
+        case"2":
             {
                 Write-Host "Buscando y eliminando virus y malware..." 
                 Start-Process "msconfig.exe" -ArgumentList "/scannow"
             }
             break
-        case "3":
+        case"3":
             {
                 Write-Host "Liberando espacio en disco..."
                 Start-Process "cleanmgr.exe" -ArgumentList "/sageset:65535 /d %windir%\System32\config\systemprofile\AppData\Local\Temp /d %windir%\System32\config\systemprofile\AppData\Local\Microsoft\Windows\Temporary Internet Files /d %windir%\System32\config\systemprofile\AppData\Local\Microsoft\Windows\SoftwareDistribution\Download"
             }
             break
-        case "4":
+        case"4":
             {
                 Write-Host "Optimizando el registro de Windows..."
                 Start-Process "regedit.exe" -ArgumentList "/s %~dp0\optimize_registry.reg"
             }
             break
-        case "5":
+        case"5":
             {
                 Write-Host "Desfragmentando el disco duro..." 
                 Start-Process "dfrg.msc"
             }
             break
-        case "6":
+        case"6":
             {
                 Write-Host "Reparando archivos de sistema..."
                 Start-Process "sfc.exe" -ArgumentList "/scannow"
             }
             break
-        case "7":
+        case"7":
             {
                 Write-Host "Eliminando archivos temporales..."
                 Start-Process "cmd.exe" -ArgumentList "/c del /q /f %windir%\Temp\*"  
             }
             break
-        case "8":
+        case"8":
             {
                 Write-Host "Desinstalando programas no deseados..."
                 Start-Process "appwiz.cpl"
             }
             break
-        case "9": 
+        case"9": 
             {
                 Write-Host "Reiniciando el sistema..."
                 Start-Process "shutdown.exe" -ArgumentList "/r /t 0"
