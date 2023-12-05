@@ -1,5 +1,8 @@
 # MantenimientoPC.ps1
 
+# Configuración de la codificación para mostrar caracteres especiales
+$OutputEncoding = [System.Text.Encoding]::UTF8
+
 # Función para desfragmentar el disco
 function Desfragmentar-Disco {
     Write-Host "Desfragmentando el disco..."
@@ -39,23 +42,27 @@ function Mostrar-Menu {
     Write-Host "3. Verificar y reparar errores en el disco"
     Write-Host "4. Actualizar el sistema"
     Write-Host "5. Escanear seguridad con Windows Defender"
-    Write-Host "6. Salir"
+    Write-Host "6. Ejecutar todas las opciones"
+    Write-Host "7. Salir"
 }
 
 # Ejecución del programa
 do {
     Mostrar-Menu
-    $opcion = Read-Host "Ingrese el número de la opción deseada"
+    $opciones = Read-Host "Ingrese los números de las opciones deseadas, separados por comas"
 
-    switch ($opcion) {
-        1 { Desfragmentar-Disco }
-        2 { Limpiar-Temporales }
-        3 { Verificar-Errores-Disco }
-        4 { Actualizar-Sistema }
-        5 { Escanear-Seguridad }
-        6 { break }
-        default { Write-Host "Opción no válida. Inténtelo de nuevo." }
+    foreach ($opcion in $opciones.Split(',')) {
+        switch ($opcion) {
+            1 { Desfragmentar-Disco }
+            2 { Limpiar-Temporales }
+            3 { Verificar-Errores-Disco }
+            4 { Actualizar-Sistema }
+            5 { Escanear-Seguridad }
+            6 { Desfragmentar-Disco; Limpiar-Temporales; Verificar-Errores-Disco; Actualizar-Sistema; Escanear-Seguridad }
+            7 { break }
+            default { Write-Host "Opción no válida: $opcion" }
+        }
     }
 
-    $continuar = Read-Host "Presione cualquier tecla para continuar o 'q' para salir"
+    $continuar = Read-Host "Presione 'q' para salir o cualquier tecla para volver al menú"
 } while ($continuar -ne 'q')
