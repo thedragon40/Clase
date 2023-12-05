@@ -1,55 +1,48 @@
-# Define maintenance options and their corresponding commands
-$options = @{
-    "Update System" = "Update-Windows";
-    "Clean Up Windows Temp Files" = "Remove-Item $env:TEMP\* -Recurse";
-    "Defragment Hard Drives" = "Optimize-Volume -DriveLetter C";
-    "Scan for and repair errors on hard drives" = "chkdsk C: /F";
-    "Check Disk for Defects" = "chkdsk";
-    "Perform System File Check" = "sfc /scannow";
-    "Remove Previous Windows Installation Files" = "Remove-Item $env:SystemRoot\SoftwareDistribution\Download\* -Recurse";
-}
+# Este script crea una interfaz gráfica completa para realizar mantenimiento a Windows 10 o 11.
 
-# Create a form to display the options
-$form = New-Object System.Windows.Forms.Form
-$form.Text = "Windows 10/11 Maintenance"
-$form.Size = New-Object System.Drawing.Size(300,200)
-$form.StartPosition = "CenterScreen"
+# Importa los módulos necesarios.
+Import-Module ISE
+Import-Module Microsoft.VisualBasic.PowerPacks
 
-# Create a list box to display the options
-$listBox = New-Object System.Windows.Forms.ListBox
-$listBox.Location = New-Object System.Drawing.Point(10,20)
-$listBox.Size = New-Object System.Drawing.Size(260,120)
-$listBox.Height = 60
+# Crea un nuevo formulario.
+$form = New-Form -WindowTitle "Mantenimiento de Windows"
 
-# Add options to the list box
-foreach ($option in $options.Keys) {
-    $listBox.Items.Add($option)
-}
+# Crea pestañas para las diferentes herramientas de mantenimiento.
+$pestañaAnalizar = $form.TabControl.Controls.AddTab("Analizar")
+$pestañaLimpiar = $form.TabControl.Controls.AddTab("Limpiar")
+$pestañaOptimizar = $form.TabControl.Controls.AddTab("Optimizar")
+$pestañaActualizar = $form.TabControl.Controls.AddTab("Actualizar")
 
-# Create a button to execute the selected command
-$button = New-Object System.Windows.Forms.Button
-$button.Location = New-Object System.Drawing.Point(75,150)
-$button.Size = New-Object System.Drawing.Size(150,20)
-$button.Text = "Run Selected Maintenance Task"
+# Crea botones para todas las herramientas de mantenimiento.
+# Pestaña Analizar
+$botonAnalizarSistema = $pestañaAnalizar.Controls.AddButton("Analizar el sistema")
+$botonRepararArchivos = $pestañaAnalizar.Controls.AddButton("Reparar archivos dañados")
 
-# Handle the button click event
-$button.Add_Click({
-    # Get the selected option and its corresponding command
-    $selectedOption = $listBox.SelectedItem
-    $command = $options[$selectedOption]
+# Pestaña Limpiar
+$botonLimpiarDiscoDuro = $pestañaLimpiar.Controls.AddButton("Limpiar el disco duro")
+$botonLiberarEspacio = $pestañaLimpiar.Controls.AddButton("Liberar espacio en el disco duro")
 
-    # Display a confirmation message box
-    $confirmation = [System.Windows.Forms.MessageBox]::Show("Are you sure you want to run the selected maintenance task?", "Confirmation", "YesNo", "Warning")
+# Pestaña Optimizar
+$botonDesfragmentarDiscoDuro = $pestañaOptimizar.Controls.AddButton("Desfragmentar el disco duro")
+$botonAjustarConfiguración = $pestañaOptimizar.Controls.AddButton("Ajustar la configuración del sistema")
 
-    # If the user confirms, run the selected command
-    if ($confirmation -eq "Yes") {
-        Invoke-Expression $command
-    }
-})
+# Pestaña Actualizar
+$botonInstalarActualizaciones = $pestañaActualizar.Controls.AddButton("Instalar actualizaciones")
+$botonVerificarEstado = $pestañaActualizar.Controls.AddButton("Verificar el estado de las actualizaciones")
 
-# Add the list box and button to the form
-$form.Controls.Add($listBox)
-$form.Controls.Add($button)
+# Crea el objeto lista.
+$lista = New-Object System.Windows.Forms.ListBox
 
-# Show the form
-$form.ShowDialog() | Out-Null
+# Agrega los comandos de mantenimiento a los botones.
+$botonAnalizarSistema.Add_Click({$lista.SelectedItem | & "sfc /scannow"})
+$botonRepararArchivos.Add_Click({$lista.SelectedItem | & "sfc /scannow"})
+$botonLimpiarDiscoDuro.Add_Click({$lista.SelectedItem | & "cleanmgr"})
+$botonLiberarEspacio.Add_Click({$lista.SelectedItem | & "cleanmgr"})
+$botonDesfragmentarDiscoDuro.Add_Click({$lista.SelectedItem | & "defrag"})
+$botonAjustarConfiguración.Add_Click({$lista.SelectedItem | & "sysdm.cpl"})
+$botonInstalarActualizaciones.Add_Click({$lista.SelectedItem | & "wuauclt /updatenow"})
+$botonVerificarEstado.Add_Click({$lista.SelectedItem | & "wuauclt /checknow"})
+
+
+# Muestra el formulario.
+$form.ShowDialog()
